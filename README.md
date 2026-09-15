@@ -2,6 +2,11 @@
 
 Application de répétition espacée : Expo / React Native, SQLite local, API NestJS et PostgreSQL. Le dossier initial était vide ; aucun système existant ni donnée utilisateur n’a été remplacé.
 
+Pour reprendre le travail depuis une autre IA ou une nouvelle session, commencer
+par [docs/HANDOFF.md](docs/HANDOFF.md). Ce fichier contient l'état réel du
+déploiement, les éléments externes déjà créés et les prochaines commandes. Il
+doit être mis à jour avec chaque changement de livraison ou d'infrastructure.
+
 ## Prérequis
 
 - Node.js 22 et npm.

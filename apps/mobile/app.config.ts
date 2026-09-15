@@ -22,6 +22,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    "./plugins/with-release-signing",
     "./plugins/with-short-cmake-builds",
     "expo-secure-store",
     "expo-sqlite",
