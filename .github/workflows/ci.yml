@@ -1,0 +1,34 @@
+name: Validate MémoCycle
+on: [pull_request, push]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: memocycle_test
+          POSTGRES_PASSWORD: ci_test_only
+          POSTGRES_DB: memocycle_test
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U memocycle_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://memocycle_test:ci_test_only@localhost:5432/memocycle_test
+      TEST_DATABASE_URL: postgresql://memocycle_test:ci_test_only@localhost:5432/memocycle_test
+      GOOGLE_IOS_URL_SCHEME: com.googleusercontent.apps.ci-bundle-validation-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npx expo-doctor@1.20.4 apps/mobile
+      - run: npm test
+      - run: npm run db:migrate
+      - run: npm run test:api
+      - run: npm run build:validate -w @memocycle/mobile

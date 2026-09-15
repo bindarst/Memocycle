@@ -1,0 +1,6 @@
+# BEGIN MEMOCYCLE
+memocycle.135-125-100-75.sslip.io {
+	reverse_proxy 127.0.0.1:8092
+	encode gzip
+}
+# END MEMOCYCLE

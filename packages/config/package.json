@@ -1,0 +1,11 @@
+{
+  "name": "@memocycle/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/plans.js",
+  "types": "src/plans.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "name": "memocycle",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "dev:api": "npm run dev -w @memocycle/api",
+    "dev:mobile": "npm run start -w @memocycle/mobile",
+    "db:generate": "prisma generate --schema apps/api/prisma/schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema apps/api/prisma/schema.prisma",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:api": "vitest run --config vitest.integration.config.mjs",
+    "build": "npm run build -w @memocycle/contracts && npm run build -w @memocycle/config && npm run build -w @memocycle/api"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "decode-uri-component": "0.5.0",
+    "eslint": "^9.39.0",
+    "multer": "2.4.0",
+    "prettier": "^3.9.6",
+    "prisma": "6.19.0",
+    "react": "19.2.3",
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1",
+    "sharp": "^0.35.4",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.46.0",
+    "uuid": "11.1.1",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "multer": "2.4.0",
+    "deepmerge-ts": "^8.0.2",
+    "effect": "^3.20.0",
+    "decode-uri-component": "0.5.0",
+    "uuid": "11.1.1",
+    "react-native-nitro-modules": "0.37.1",
+    "react": "19.2.3",
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1"
+  },
+  "dependencies": {
+    "expo": "~57.0.23",
+    "expo-notifications": "~57.0.19"
+  }
+}

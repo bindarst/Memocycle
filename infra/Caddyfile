@@ -1,0 +1,22 @@
+{$API_DOMAIN:api.memocycle.app} {
+  request_body {
+    max_size 1MB
+  }
+  reverse_proxy api:3000
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    -Server
+  }
+}
+
+{$PUBLIC_DOMAIN:memocycle.app} {
+  root * /srv/public
+  file_server
+  header {
+    Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://{$API_DOMAIN:api.memocycle.app}; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    X-Content-Type-Options "nosniff"
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    -Server
+  }
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily MémoCycle PostgreSQL backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+Persistent=true
+RandomizedDelaySec=15m
+Unit=memocycle-backup.service
+
+[Install]
+WantedBy=timers.target
+

@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String
+  displayName String? @map("display_name")
+  avatarUrl String? @map("avatar_url")
+  locale String @default("fr-BE")
+  timezone String
+  status String @default("active")
+  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
+  subscriptionTier String @default("free") @map("subscription_tier")
+  syncSequence BigInt @default(0) @map("sync_sequence")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  identities AuthIdentity[]
+  sessions Session[]
+  devices Device[]
+  subjects Subject[]
+  modules Module[]
+  courses Course[]
+  exams Exam[]
+  plans ReviewPlan[]
+  events ReviewEvent[]
+  mutations ProcessedMutation[]
+  changes SyncChange[]
+  settings UserSettings?
+  @@map("users")
+}
+model AuthIdentity {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  provider String
+  providerSubject String @map("provider_subject")
+  emailAtAuth String? @map("email_at_auth")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@unique([provider,providerSubject])
+  @@index([userId])
+  @@map("auth_identities")
+}
+model Device {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  installationId String @map("installation_id")
+  platform String
+  deviceName String? @map("device_name")
+  appVersion String @map("app_version")
+  lastSeenAt DateTime @default(now()) @db.Timestamptz @map("last_seen_at")
+  lastSyncAt DateTime? @db.Timestamptz @map("last_sync_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  revokedAt DateTime? @db.Timestamptz @map("revoked_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  sessions Session[]
+  @@unique([userId,installationId])
+  @@map("devices")
+}
+model Session {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  deviceId String @db.Uuid @map("device_id")
+  refreshTokenHash String @unique @map("refresh_token_hash")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  lastUsedAt DateTime @default(now()) @db.Timestamptz @map("last_used_at")
+  expiresAt DateTime @db.Timestamptz @map("expires_at")
+  revokedAt DateTime? @db.Timestamptz @map("revoked_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  device Device @relation(fields:[deviceId],references:[id],onDelete:Cascade)
+  usedTokens UsedRefreshToken[]
+  @@index([userId])
+  @@map("sessions")
+}
+model UsedRefreshToken {
+  id String @id @default(uuid()) @db.Uuid
+  hash String @unique
+  sessionId String @db.Uuid @map("session_id")
+  session Session @relation(fields:[sessionId],references:[id],onDelete:Cascade)
+  @@map("used_refresh_tokens")
+}
+model Subject {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  title String @db.VarChar(100)
+  description String?
+  iconKey String? @map("icon_key")
+  colorKey String? @map("color_key")
+  position Int @default(0)
+  archivedAt DateTime? @db.Timestamptz @map("archived_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  modules Module[]
+  courses Course[]
+  exams Exam[]
+  @@unique([id,userId])
+  @@index([userId,updatedAt])
+  @@map("subjects")
+}
+model Module {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  subjectId String @db.Uuid @map("subject_id")
+  title String @db.VarChar(100)
+  description String?
+  position Int @default(0)
+  archivedAt DateTime? @db.Timestamptz @map("archived_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  subject Subject @relation(fields:[subjectId,userId],references:[id,userId],onDelete:Cascade)
+  courses Course[]
+  exams Exam[]
+  @@unique([id,subjectId,userId])
+  @@index([userId,updatedAt])
+  @@index([subjectId])
+  @@map("modules")
+}
+model Course {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  subjectId String @db.Uuid @map("subject_id")
+  moduleId String? @db.Uuid @map("module_id")
+  title String @db.VarChar(100)
+  description String?
+  estimatedReviewMinutes Int @default(10) @map("estimated_review_minutes")
+  importance Int @default(2)
+  status String @default("draft")
+  studiedAt DateTime? @db.Timestamptz @map("studied_at")
+  archivedAt DateTime? @db.Timestamptz @map("archived_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  subject Subject @relation(fields:[subjectId,userId],references:[id,userId],onDelete:Cascade)
+  module Module? @relation(fields:[moduleId,subjectId,userId],references:[id,subjectId,userId],onDelete:NoAction)
+  plan ReviewPlan?
+  events ReviewEvent[]
+  @@unique([id,userId])
+  @@index([userId,updatedAt])
+  @@index([subjectId])
+  @@index([moduleId])
+  @@map("courses")
+}
+model Exam {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  subjectId String @db.Uuid @map("subject_id")
+  moduleId String? @db.Uuid @map("module_id")
+  title String @db.VarChar(100)
+  examAt DateTime @db.Timestamptz @map("exam_at")
+  notes String?
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  subject Subject @relation(fields:[subjectId,userId],references:[id,userId],onDelete:Cascade)
+  module Module? @relation(fields:[moduleId,subjectId,userId],references:[id,subjectId,userId],onDelete:NoAction)
+  @@index([userId,updatedAt])
+  @@index([subjectId])
+  @@index([moduleId])
+  @@map("exams")
+}
+model ReviewPlan {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  courseId String @unique @db.Uuid @map("course_id")
+  schedulerType String @default("classic") @map("scheduler_type")
+  scheduleVersion Int @default(1) @map("schedule_version")
+  intervalsJson Json @map("intervals_json")
+  currentStep Int @map("current_step")
+  nextReviewAt DateTime? @db.Timestamptz @map("next_review_at")
+  startedAt DateTime @db.Timestamptz @map("started_at")
+  lastReviewedAt DateTime? @db.Timestamptz @map("last_reviewed_at")
+  completedAt DateTime? @db.Timestamptz @map("completed_at")
+  status String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  course Course @relation(fields:[courseId,userId],references:[id,userId],onDelete:Cascade)
+  events ReviewEvent[]
+  @@unique([id,courseId,userId])
+  @@unique([courseId,userId])
+  @@index([userId,updatedAt])
+  @@index([nextReviewAt])
+  @@map("review_plans")
+}
+model ReviewEvent {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  courseId String @db.Uuid @map("course_id")
+  reviewPlanId String @db.Uuid @map("review_plan_id")
+  cycle Int @default(1)
+  kind String
+  stepIndex Int? @map("step_index")
+  scheduledAt DateTime? @db.Timestamptz @map("scheduled_at")
+  completedAt DateTime @db.Timestamptz @map("completed_at")
+  delayMinutes Int @default(0) @map("delay_minutes")
+  deviceId String? @db.Uuid @map("device_id")
+  confidence String?
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @default(now()) @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  course Course @relation(fields:[courseId,userId],references:[id,userId],onDelete:Cascade)
+  plan ReviewPlan @relation(fields:[reviewPlanId,courseId,userId],references:[id,courseId,userId],onDelete:Cascade)
+  @@unique([reviewPlanId,cycle,stepIndex])
+  @@index([userId,updatedAt])
+  @@index([courseId])
+  @@index([completedAt])
+  @@map("review_events")
+}
+model UserSettings {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid @map("user_id")
+  dailyStudyMinutes Int? @map("daily_study_minutes")
+  remindersEnabled Boolean @default(false) @map("reminders_enabled")
+  soundEnabled Boolean @default(true) @map("sound_enabled")
+  vibrationEnabled Boolean @default(true) @map("vibration_enabled")
+  morningSummary Boolean @default(false) @map("morning_summary")
+  appearance String @default("system")
+  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@map("user_settings")
+}
+model ProcessedMutation {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  clientMutationId String @unique @db.Uuid @map("client_mutation_id")
+  requestHash String @map("request_hash")
+  result Json
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId])
+  @@map("processed_mutations")
+}
+model SyncChange {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  syncSeq BigInt @map("sync_seq")
+  entityType String @map("entity_type")
+  entity Json
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@unique([userId,syncSeq])
+  @@map("sync_changes")
+}
