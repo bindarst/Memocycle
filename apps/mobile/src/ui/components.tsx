@@ -9,7 +9,11 @@ import {
   useColorScheme,
   type TextInputProps,
   Alert,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius } from "../theme/tokens";
 import { all, subscribe } from "../database/repository";
@@ -55,8 +59,9 @@ export function Screen({ children }: { children: React.ReactNode }) {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          padding: 24,
-          gap: 20,
+          paddingHorizontal: 20,
+          paddingTop: 16,
+          gap: 18,
           width: "100%",
           maxWidth: 720,
           alignSelf: "center",
@@ -72,37 +77,46 @@ export function Label({
   children,
   muted = false,
   large = false,
+  style,
 }: {
   children: React.ReactNode;
   muted?: boolean;
   large?: boolean;
+  style?: StyleProp<import("react-native").TextStyle>;
 }) {
   const c = usePalette();
   return (
     <Text
-      style={{
-        color: muted ? c.textSecondary : c.textPrimary,
-        fontSize: large ? 28 : 16,
-        lineHeight: large ? 36 : 24,
-        fontWeight: large ? "700" : "400",
-      }}
+      style={[
+        {
+          color: muted ? c.textSecondary : c.textPrimary,
+          fontSize: large ? 30 : 16,
+          lineHeight: large ? 36 : 24,
+          fontWeight: large ? "800" : "400",
+          letterSpacing: large ? -0.8 : 0,
+        },
+        style,
+      ]}
     >
       {children}
     </Text>
   );
 }
-export function Card({ children }: { children: React.ReactNode }) {
+export function Card({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
   const c = usePalette();
   return (
     <View
-      style={{
-        padding: 20,
-        gap: 12,
-        borderRadius: radius.card,
-        borderWidth: 1,
-        borderColor: c.border,
-        backgroundColor: c.surface,
-      }}
+      style={[
+        styles.card,
+        { borderColor: c.border, backgroundColor: c.surface },
+        style,
+      ]}
     >
       {children}
     </View>
@@ -114,12 +128,14 @@ export function Button({
   disabled = false,
   secondary = false,
   danger = false,
+  icon: Icon,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   secondary?: boolean;
   danger?: boolean;
+  icon?: LucideIcon;
 }) {
   const c = usePalette();
   return (
@@ -130,10 +146,13 @@ export function Button({
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: 48,
+        minHeight: 52,
+        flexDirection: "row",
+        gap: 10,
         justifyContent: "center",
         alignItems: "center",
-        padding: 12,
+        paddingHorizontal: 18,
+        paddingVertical: 13,
         borderRadius: radius.button,
         backgroundColor: secondary ? c.surface : danger ? c.danger : c.primary,
         borderWidth: secondary ? 1 : 0,
@@ -141,11 +160,18 @@ export function Button({
         opacity: disabled ? 0.45 : pressed ? 0.7 : 1,
       })}
     >
+      {Icon && (
+        <Icon
+          size={19}
+          strokeWidth={2.3}
+          color={secondary ? c.textPrimary : c.onPrimary}
+        />
+      )}
       <Text
         style={{
           fontSize: 16,
           fontWeight: "600",
-          color: secondary ? c.textPrimary : c.background,
+          color: secondary ? c.textPrimary : c.onPrimary,
         }}
       >
         {title}
@@ -215,3 +241,88 @@ export function confirm(title: string, message: string, action: () => void) {
     { text: "Confirmer", onPress: action },
   ]);
 }
+
+export function SectionTitle({
+  eyebrow,
+  title,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  action?: React.ReactNode;
+}) {
+  const c = usePalette();
+  return (
+    <View style={styles.sectionTitle}>
+      <View style={{ flex: 1, gap: 3 }}>
+        {eyebrow ? (
+          <Text style={[styles.eyebrow, { color: c.primary }]}>{eyebrow}</Text>
+        ) : null}
+        <Text style={[styles.sectionHeading, { color: c.textPrimary }]}>{title}</Text>
+      </View>
+      {action}
+    </View>
+  );
+}
+
+export function Pill({
+  children,
+  tone = "primary",
+}: {
+  children: React.ReactNode;
+  tone?: "primary" | "success" | "warning";
+}) {
+  const c = usePalette();
+  const backgroundColor =
+    tone === "success"
+      ? c.successSoft
+      : tone === "warning"
+        ? c.warningSoft
+        : c.primarySoft;
+  const color =
+    tone === "success" ? c.success : tone === "warning" ? c.warning : c.primary;
+  return (
+    <View style={[styles.pill, { backgroundColor }]}>
+      <Text style={[styles.pillText, { color }]}>{children}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    padding: 20,
+    gap: 12,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    shadowColor: "#11121A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 2,
+  },
+  sectionTitle: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 12,
+    marginTop: 4,
+  },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  sectionHeading: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+    letterSpacing: -0.45,
+  },
+  pill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  pillText: { fontSize: 12, fontWeight: "800", letterSpacing: 0.2 },
+});

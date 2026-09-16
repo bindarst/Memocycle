@@ -89,9 +89,9 @@ L'APK autonome final a été construit avec :
 
 Fichier local : `artifacts/memocycle-standalone.apk`.
 
-- Taille : `115006331` octets.
+- Taille du nouveau build premium : `122789828` octets.
 - SHA-256 :
-  `9FC83E008DCDDC92B51890BD4A8FC8AE42781AA39C396556A3179DC7CA55376D`.
+  `880F627FAE25F99941F4B299F8A00B0A8E037C54D69BC7C39D06D0974B30291D`.
 - Signature APK v2 vérifiée avec le certificat MémoCycle et la SHA-1 attendue.
 - Release : `v1.0.0-beta.1` sur GitHub :
   `https://github.com/bindarst/Memocycle/releases/tag/v1.0.0-beta.1`.
@@ -101,6 +101,18 @@ Fichier local : `artifacts/memocycle-standalone.apk`.
   suppression de l'ancien build portant une signature incompatible.
 - Android confirme `versionName=1.0.0`, `versionCode=1` et l'activité
   `app.memocycle.mobile/.MainActivity` visible au premier plan.
+
+## Design premium et mémoire
+
+- Palette crème/indigo, mode sombre assorti, cartes premium et navigation par
+  icônes.
+- Icônes Lucide et rendu `react-native-svg` ajoutés comme dépendances directes.
+- Courbe de l'oubli visible sur Aujourd'hui et Statistiques, recalculée toutes
+  les 30 secondes à partir des plans SQLite.
+- Rétention exponentielle calibrée à 90 % à l'échéance active ; voir
+  `docs/DESIGN.md` pour la formule, les sources et les limites.
+- Le nouveau build est signé et vérifié. Son installation sur le téléphone doit
+  être retentée, car l'appareil ADB s'est déconnecté après la compilation.
 
 Étapes restantes :
 
@@ -119,6 +131,7 @@ Fichier local : `artifacts/memocycle-standalone.apk`.
 - Installation et démarrage sur téléphone Android physique : réussis.
 - URL OVH et client OAuth Web vérifiés dans le bundle Android.
 - Signature v2 et certificat de production vérifiés avec `apksigner`.
+- Tests du modèle de mémoire : réussis.
 - Déploiement OVH : API et PostgreSQL sains.
 - Caddy et certificat Let's Encrypt : actifs.
 - Les conteneurs Equaz contrôlés sont restés sains après le déploiement.

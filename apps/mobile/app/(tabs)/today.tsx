@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { endOfDay, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { BarChart3, BellRing, BookOpenCheck, Plus } from "lucide-react-native";
 import {
   Screen,
   Label,
@@ -10,8 +11,11 @@ import {
   Button,
   useEntities,
   usePalette,
+  Pill,
+  SectionTitle,
 } from "../../src/ui/components";
 import { CourseCard } from "../../src/ui/CourseCard";
+import { MemoryCurve } from "../../src/ui/MemoryCurve";
 import {
   courseSchema,
   planSchema,
@@ -85,67 +89,92 @@ export default function Today() {
   );
   return (
     <Screen>
+      <View style={styles.topline}>
+        <View style={{ flex: 1, gap: 5 }}>
+          <Text style={[styles.date, { color: c.primary }]}>JOURNÉE D’ÉTUDE</Text>
+          <Label large>
+            Bonjour
+            {currentSession()?.user.displayName
+              ? ` ${currentSession()!.user.displayName!.split(" ")[0]}`
+              : ""}
+          </Label>
+        </View>
+        {state === "offline_authenticated" ? <Pill tone="warning">Hors ligne</Pill> : <Pill tone="success">Synchronisé</Pill>}
+      </View>
       <Label muted>{format(new Date(), "EEEE d MMMM", { locale: fr })}</Label>
-      <Label large>
-        Bonjour
-        {currentSession()?.user.displayName
-          ? ` ${currentSession()!.user.displayName!.split(" ")[0]}`
-          : ""}
-      </Label>
-      {state === "offline_authenticated" && (
-        <Label muted>Mode hors connexion</Label>
-      )}
       {settings && !settings.remindersEnabled && (
         <Card>
-          <Label>Les rappels sont désactivés</Label>
+          <View style={styles.inlineTitle}>
+            <BellRing color={c.warning} size={21} />
+            <Label>Les rappels sont désactivés</Label>
+          </View>
           <Button
             secondary
+            icon={BellRing}
             title="Activer"
             onPress={() => router.push("/settings/notifications")}
           />
         </Card>
       )}
-      <Card>
-        <Label large>
-          {due.length} révision{due.length > 1 ? "s" : ""}
-        </Label>
-        <Label muted>environ {minutes} min</Label>
+      <Card style={[styles.hero, { backgroundColor: c.primary, borderColor: c.primary }]}>
+        <View style={[styles.orb, { backgroundColor: c.accent }]} />
+        <View style={styles.heroHeader}>
+          <View style={[styles.heroIcon, { backgroundColor: c.accent }]}>
+            <BookOpenCheck color={c.accentText} size={26} strokeWidth={2.4} />
+          </View>
+          <Text style={[styles.heroKicker, { color: c.onPrimary }]}>SESSION DU JOUR</Text>
+        </View>
+        <View style={styles.heroCountRow}>
+          <Text style={[styles.heroNumber, { color: c.onPrimary }]}>{due.length}</Text>
+          <View style={{ gap: 2, paddingBottom: 7 }}>
+            <Text style={[styles.heroLabel, { color: c.onPrimary }]}>révision{due.length > 1 ? "s" : ""}</Text>
+            <Text style={[styles.heroMeta, { color: c.onPrimary }]}>environ {minutes} min</Text>
+          </View>
+        </View>
         {baseline > 0 && (
           <>
-            <Label>
+            <Text style={[styles.progressLabel, { color: c.onPrimary }]}>
               {completed} sur {Math.max(baseline, completed)} terminées
-            </Label>
+            </Text>
             <View
-              style={{ height: 6, backgroundColor: c.border, borderRadius: 3 }}
+              style={[styles.progressTrack, { backgroundColor: `${c.onPrimary}33` }]}
             >
               <View
                 style={{
-                  height: 6,
+                  height: 8,
                   width: `${Math.min(100, (completed / baseline) * 100)}%`,
-                  backgroundColor: c.success,
-                  borderRadius: 3,
+                  backgroundColor: c.accent,
+                  borderRadius: 8,
                 }}
               />
             </View>
           </>
         )}
       </Card>
+
+      <MemoryCurve plans={plans} now={tick} />
+
       {!courses.length ? (
         <Card>
-          <Label large>Ton planning est vide.</Label>
+          <View style={[styles.emptyIcon, { backgroundColor: c.primarySoft }]}>
+            <Plus color={c.primary} size={30} />
+          </View>
+          <Label large>Crée ton premier cycle.</Label>
           <Label muted>
             Ajoute ton premier cours et MémoCycle organisera la suite.
           </Label>
           <Button
+            icon={Plus}
             title="Ajouter mon premier cours"
             onPress={() => router.push("/(tabs)/library")}
           />
         </Card>
       ) : (
         <>
-          <Label large>
-            {due.length ? "À réviser" : "Rien à réviser maintenant"}
-          </Label>
+          <SectionTitle
+            eyebrow="Focus"
+            title={due.length ? "À réviser maintenant" : "Tout est à jour"}
+          />
           {due.map((p) => (
             <CourseCard
               key={p.id}
@@ -153,7 +182,7 @@ export default function Today() {
               plan={p}
             />
           ))}
-          {!!later.length && <Label large>Ensuite</Label>}
+          {!!later.length && <SectionTitle eyebrow="À venir" title="Ensuite" />}
           {later.slice(0, 3).map((p) => (
             <CourseCard
               key={p.id}
@@ -163,7 +192,7 @@ export default function Today() {
           ))}
         </>
       )}
-      {!!exams.length && <Label large>Examens</Label>}
+      {!!exams.length && <SectionTitle eyebrow="Objectifs" title="Examens" />}
       {exams.slice(0, 3).map((exam) => {
         const subjectCourses = courses.filter(
           (course) => course.subjectId === exam.subjectId,
@@ -182,9 +211,28 @@ export default function Today() {
       })}
       <Button
         secondary
+        icon={BarChart3}
         title="Mes statistiques"
         onPress={() => router.push("/stats")}
       />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  topline: { flexDirection: "row", alignItems: "center", gap: 12 },
+  date: { fontSize: 11, fontWeight: "900", letterSpacing: 1.5 },
+  inlineTitle: { flexDirection: "row", alignItems: "center", gap: 10 },
+  hero: { minHeight: 205, overflow: "hidden", padding: 22 },
+  orb: { position: "absolute", width: 150, height: 150, borderRadius: 75, right: -44, top: -58, opacity: 0.18 },
+  heroHeader: { flexDirection: "row", alignItems: "center", gap: 11 },
+  heroIcon: { width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  heroKicker: { fontSize: 12, fontWeight: "900", letterSpacing: 1.35, opacity: 0.86 },
+  heroCountRow: { flexDirection: "row", alignItems: "flex-end", gap: 12, marginTop: 3 },
+  heroNumber: { fontSize: 58, lineHeight: 62, fontWeight: "900", letterSpacing: -2.5 },
+  heroLabel: { fontSize: 19, fontWeight: "800" },
+  heroMeta: { fontSize: 13, fontWeight: "600", opacity: 0.72 },
+  progressLabel: { fontSize: 13, fontWeight: "700", opacity: 0.86 },
+  progressTrack: { height: 8, borderRadius: 8, overflow: "hidden" },
+  emptyIcon: { width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+});

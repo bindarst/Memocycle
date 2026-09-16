@@ -46,6 +46,10 @@ et sur la [page de la release](https://github.com/bindarst/Memocycle/releases/ta
 Elle s'installe directement sur Android, sans Expo et sans connexion USB. Les
 APK restent hors de Git et sont joints aux releases.
 
+L'interface utilise les icônes vectorielles open source Lucide et une courbe de
+l'oubli actualisée à partir du planning local. La méthode de calcul, ses limites
+et les références sont détaillées dans [docs/DESIGN.md](docs/DESIGN.md).
+
 ```sh
 cd apps/mobile
 npx expo run:android
