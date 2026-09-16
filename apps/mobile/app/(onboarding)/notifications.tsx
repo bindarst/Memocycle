@@ -1,3 +1,5 @@
+import React from "react";
+import { View, Text } from "react-native";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { updateSettings } from "../../src/database/settingsService";
 import { requestReminderPermission } from "../../src/notifications/notificationService";
@@ -7,10 +9,14 @@ import {
   Button,
   ErrorText,
   useAction,
+  usePalette,
 } from "../../src/ui/components";
+
 export default function Notifications() {
   const { userId } = useAuth();
   const a = useAction();
+  const c = usePalette();
+
   const finish = (ask: boolean) =>
     a.run(async () => {
       const enabled = ask ? await requestReminderPermission() : false;
@@ -19,25 +25,33 @@ export default function Notifications() {
         onboardingCompleted: true,
       });
     });
+
   return (
     <Screen>
-      <Label muted>3 / 3</Label>
-      <Label large>
-        Laisse MémoCycle te rappeler quand une révision arrive.
-      </Label>
-      <Label>Tu recevras uniquement les rappels liés à tes révisions.</Label>
-      <Button
-        title="Activer les rappels"
-        disabled={a.busy}
-        onPress={() => void finish(true)}
-      />
-      <Button
-        secondary
-        title="Plus tard"
-        disabled={a.busy}
-        onPress={() => void finish(false)}
-      />
+      <Text style={{ fontSize: 13, fontWeight: "600", color: c.textSecondary }}>
+        3 / 3
+      </Text>
+      <Label large>Rappels de révision</Label>
+      <Label muted>Un rappel lorsqu’une révision est due.</Label>
+
       <ErrorText message={a.error} />
+
+      <View style={{ gap: 10, marginTop: 16 }}>
+        <Button
+          fullWidth
+          size="lg"
+          title="Activer les rappels"
+          disabled={a.busy}
+          onPress={() => void finish(true)}
+        />
+        <Button
+          variant="ghost"
+          title="Plus tard"
+          disabled={a.busy}
+          onPress={() => void finish(false)}
+          style={{ alignSelf: "center" }}
+        />
+      </View>
     </Screen>
   );
 }

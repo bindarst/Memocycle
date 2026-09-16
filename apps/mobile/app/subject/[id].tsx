@@ -1,14 +1,27 @@
+import React from "react";
 import { endOfDay } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
+import { View, Text } from "react-native";
+import {
+  ArrowLeft01Icon,
+  Book01Icon,
+  Folder01Icon,
+  Add01Icon,
+  Delete02Icon,
+} from "@hugeicons/core-free-icons";
 import {
   Screen,
   Label,
   Card,
   Button,
+  IconButton,
+  ListRow,
   ErrorText,
   useAction,
   useEntities,
   confirm,
+  SectionTitle,
+  usePalette,
 } from "../../src/ui/components";
 import { EntityForm } from "../../src/ui/EntityForm";
 import { displayDate } from "../../src/utils/dates";
@@ -19,13 +32,16 @@ export default function Subject() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useAuth();
   const action = useAction();
+  const c = usePalette();
+
   const subject = useEntities("subject").find((s) => s.id === id);
   const modules = useEntities("module").filter((m) => m.subjectId === id);
-  const courses = useEntities("course").filter((c) => c.subjectId === id);
+  const courses = useEntities("course").filter((item) => item.subjectId === id);
   const plans = useEntities("reviewPlan");
   const exams = useEntities("exam")
     .filter((e) => e.subjectId === id)
     .sort((a, b) => String(a.examAt).localeCompare(String(b.examAt)));
+
   const active = courses.filter(
     (course) => course.status === "active" && !course.archivedAt,
   );
@@ -37,6 +53,7 @@ export default function Subject() {
         endOfDay(new Date()).getTime() &&
       active.some((course) => course.id === plan.courseId),
   ).length;
+
   const nextExam = exams.find(
     (exam) => new Date(String(exam.examAt)).getTime() >= Date.now(),
   );
@@ -45,97 +62,196 @@ export default function Subject() {
         (new Date(String(nextExam.examAt)).getTime() - Date.now()) / 86_400_000,
       )
     : null;
+
   return (
     <Screen>
-      <Button secondary title="Retour" onPress={() => router.back()} />
-      <Label large>{String(subject?.title ?? "Matière introuvable")}</Label>
-      {!!subject?.description && <Label>{String(subject.description)}</Label>}
-      {nextExam && (
-        <Card>
-          <Label>
-            {days === 0
-              ? "Examen aujourd’hui"
-              : `Examen dans ${days} jour${days === 1 ? "" : "s"}`}
-          </Label>
-          <Label muted>
-            {String(nextExam.title)} · {displayDate(String(nextExam.examAt))}
-          </Label>
-          {!courses.some((course) => course.studiedAt) && (
-            <Label muted>Aucun cours de cette matière n’a encore été étudié.</Label>
-          )}
+      {/* Header */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <IconButton
+          icon={ArrowLeft01Icon}
+          accessibilityLabel="Retour"
+          onPress={() => router.back()}
+        />
+        <View style={{ flex: 1 }}>
+          <Label large>{String(subject?.title ?? "Matière introuvable")}</Label>
+        </View>
+        {subject && <EntityForm kind="subject" entityId={id} />}
+      </View>
+
+      {!!subject?.description && (
+        <Text style={{ fontSize: 14, color: c.textSecondary }}>
+          {String(subject.description)}
+        </Text>
+      )}
+
+      {/* Overview stats card */}
+      <Card
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-around",
+          paddingVertical: 10,
+        }}
+      >
+        <View style={{ alignItems: "center", gap: 2 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+            {modules.length}
+          </Text>
+          <Text style={{ fontSize: 12, color: c.textSecondary }}>Modules</Text>
+        </View>
+        <View style={{ alignItems: "center", gap: 2 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+            {courses.length}
+          </Text>
+          <Text style={{ fontSize: 12, color: c.textSecondary }}>Cours</Text>
+        </View>
+        <View style={{ alignItems: "center", gap: 2 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+            {dueToday}
+          </Text>
+          <Text style={{ fontSize: 12, color: c.textSecondary }}>À réviser</Text>
+        </View>
+        {days !== null && (
+          <View style={{ alignItems: "center", gap: 2 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: c.warning }}>
+              {days === 0 ? "Auj." : `J-${days}`}
+            </Text>
+            <Text style={{ fontSize: 12, color: c.textSecondary }}>Examen</Text>
+          </View>
+        )}
+      </Card>
+
+      {/* Modules section */}
+      <SectionTitle
+        title="Modules"
+        action={<EntityForm kind="module" subjectId={id} />}
+      />
+      {modules.length > 0 ? (
+        <View style={{ gap: 6 }}>
+          {modules.map((m) => {
+            const modCourses = courses.filter((crs) => crs.moduleId === m.id).length;
+            return (
+              <ListRow
+                key={m.id}
+                icon={Folder01Icon}
+                title={String(m.title)}
+                subtitle={`${modCourses} cours`}
+                showChevron
+                onPress={() => router.push(`/module/${m.id}`)}
+              />
+            );
+          })}
+        </View>
+      ) : (
+        <Card style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+          <Text style={{ fontSize: 13, color: c.textSecondary }}>
+            Aucun module
+          </Text>
         </Card>
       )}
-      <Card>
-        <Label>
-          {modules.length} module{modules.length === 1 ? "" : "s"} · {courses.length}{" "}
-          cours
-        </Label>
-        <Label>Aujourd’hui · {dueToday} révision{dueToday === 1 ? "" : "s"}</Label>
-        <Label>Progression · {active.length} / {courses.length} cours actifs</Label>
-      </Card>
-      {subject && <EntityForm kind="subject" entityId={id} />}
-      {exams.map((exam) => (
-        <Card key={exam.id}>
-          <Label>{String(exam.title)}</Label>
-          <Label muted>{displayDate(String(exam.examAt))}</Label>
-          <EntityForm kind="exam" subjectId={id} entityId={exam.id} />
+
+      {/* Courses section */}
+      <SectionTitle
+        title="Cours"
+        action={
           <Button
-            danger
-            title="Supprimer cette date d’examen"
+            size="sm"
+            variant="secondary"
+            icon={Add01Icon}
+            title="Cours"
+            onPress={() =>
+              router.push({ pathname: "/course/new", params: { subjectId: id } })
+            }
+          />
+        }
+      />
+      {courses.length > 0 ? (
+        <View style={{ gap: 6 }}>
+          {courses.map((crs) => (
+            <ListRow
+              key={crs.id}
+              icon={Book01Icon}
+              title={String(crs.title)}
+              rightText={crs.estimatedReviewMinutes ? `${crs.estimatedReviewMinutes} min` : undefined}
+              showChevron
+              onPress={() => router.push(`/course/${crs.id}`)}
+            />
+          ))}
+        </View>
+      ) : (
+        <Card style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+          <Text style={{ fontSize: 13, color: c.textSecondary }}>
+            Aucun cours dans cette matière
+          </Text>
+        </Card>
+      )}
+
+      {/* Exams section */}
+      <SectionTitle
+        title="Examens"
+        action={<EntityForm kind="exam" subjectId={id} />}
+      />
+      {exams.length > 0 ? (
+        <View style={{ gap: 6 }}>
+          {exams.map((exam) => (
+            <Card
+              key={exam.id}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+              }}
+            >
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: c.textPrimary }}>
+                  {String(exam.title)}
+                </Text>
+                <Text style={{ fontSize: 12, color: c.textSecondary }}>
+                  {displayDate(String(exam.examAt))}
+                </Text>
+              </View>
+              <IconButton
+                icon={Delete02Icon}
+                accessibilityLabel="Supprimer examen"
+                onPress={() =>
+                  confirm(
+                    "Supprimer cette date d’examen ?",
+                    "Elle disparaîtra du calendrier.",
+                    () => void action.run(() => remove("exam", exam.id, userId)),
+                  )
+                }
+              />
+            </Card>
+          ))}
+        </View>
+      ) : null}
+
+      {/* Delete Subject if empty */}
+      {subject && modules.length === 0 && courses.length === 0 && exams.length === 0 && (
+        <View style={{ marginTop: 12 }}>
+          <Button
+            size="sm"
+            variant="destructive"
+            icon={Delete02Icon}
+            title="Supprimer cette matière"
             onPress={() =>
               confirm(
-                "Supprimer cette date d’examen ?",
-                "Elle disparaîtra du calendrier.",
-                () => void action.run(() => remove("exam", exam.id, userId)),
+                "Supprimer cette matière ?",
+                "Cette action supprimera la matière.",
+                () =>
+                  void action.run(async () => {
+                    await remove("subject", id, userId);
+                    router.back();
+                  }),
               )
             }
           />
-        </Card>
-      ))}
-      <EntityForm kind="module" subjectId={id} />
-      <EntityForm kind="exam" subjectId={id} />
-      <Button
-        title="Ajouter un cours"
-        onPress={() =>
-          router.push({ pathname: "/course/new", params: { subjectId: id } })
-        }
-      />
-      {modules.map((module) => (
-        <Button
-          secondary
-          key={module.id}
-          title={String(module.title)}
-          onPress={() => router.push(`/module/${module.id}`)}
-        />
-      ))}
-      {courses
-        .filter((course) => !course.moduleId)
-        .map((course) => (
-          <Button
-            secondary
-            key={course.id}
-            title={String(course.title)}
-            onPress={() => router.push(`/course/${course.id}`)}
-          />
-        ))}
-      {subject && modules.length === 0 && courses.length === 0 && exams.length === 0 && (
-        <Button
-          danger
-          title="Supprimer cette matière"
-          onPress={() =>
-            confirm(
-              "Supprimer cette matière ?",
-              "Cette action supprimera la matière de tous tes appareils.",
-              () =>
-                void action.run(async () => {
-                  await remove("subject", id, userId);
-                  router.back();
-                }),
-            )
-          }
-        />
+        </View>
       )}
+
       <ErrorText message={action.error} />
     </Screen>
   );
 }
+

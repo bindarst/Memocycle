@@ -13,14 +13,37 @@ import { courseSchema, planSchema } from "../database/entities";
 import { newId } from "../utils/ids";
 import { planToMemoryState } from "./fsrsScheduler";
 
+import type { ReviewSessionType, StudyMethod } from "@memocycle/contracts";
+
+export interface CompleteReviewOptions {
+  rating?: ReviewRating;
+  desiredRetention?: number;
+  durationSeconds?: number;
+  sessionType?: ReviewSessionType;
+  studyMethod?: StudyMethod;
+}
+
 export async function completeReview(
   userId: string,
   courseId: string,
   command: ReviewCommand["command"],
   mutationId: string,
-  rating?: ReviewRating,
-  desiredRetention?: number,
+  ratingOrOptions?: ReviewRating | CompleteReviewOptions,
+  desiredRetentionParam?: number,
 ) {
+  const options: CompleteReviewOptions =
+    typeof ratingOrOptions === "object" && ratingOrOptions !== null
+      ? ratingOrOptions
+      : {
+          rating: ratingOrOptions,
+          desiredRetention: desiredRetentionParam,
+        };
+
+  const rating = options.rating;
+  const desiredRetention = options.desiredRetention;
+  const durationSeconds = options.durationSeconds;
+  const sessionType: ReviewSessionType = options.sessionType ?? "scheduled_review";
+  const studyMethod = options.studyMethod;
   const db = await database();
   await db.withExclusiveTransactionAsync(async (tx) => {
     await tx.execAsync("PRAGMA defer_foreign_keys = ON");
@@ -120,6 +143,9 @@ export async function completeReview(
             ),
           ),
       confidence: rating ?? (command === "start" ? "good" : null),
+      durationSeconds: durationSeconds ?? null,
+      sessionType,
+      studyMethod: studyMethod ?? null,
     });
 
     const planEntity = entitySchema.parse({

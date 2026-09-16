@@ -4,18 +4,15 @@ import { endOfDay, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import {
-  BarChart3,
-  BellRing,
-  BookOpenCheck,
-  Plus,
-  Flame,
-  Calendar as CalendarIcon,
-  Play,
-  GraduationCap,
-} from "lucide-react-native";
+  Add01Icon,
+  FireIcon,
+  PlayIcon,
+  GraduationCapIcon,
+  Clock01Icon,
+  AlertCircleIcon,
+} from "@hugeicons/core-free-icons";
 import {
   Screen,
-  Label,
   Card,
   Button,
   useEntities,
@@ -23,6 +20,7 @@ import {
   Pill,
   SectionTitle,
 } from "../../src/ui/components";
+import { AppIcon } from "../../src/ui/Icon";
 import { CourseCard } from "../../src/ui/CourseCard";
 import { MemoryCurve } from "../../src/ui/MemoryCurve";
 import {
@@ -33,14 +31,17 @@ import {
   type Course,
   type Plan,
   type Exam,
+  type StudySession,
 } from "../../src/database/entities";
+import type { UnifiedCalendarEvent } from "@memocycle/contracts";
+import { detectCalendarConflicts } from "../../src/calendar/calendarService";
+import { fetchDeviceEvents } from "../../src/calendar/localCalendarService";
 import { database } from "../../src/database/database";
 import { currentSession } from "../../src/auth/authService";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { dayKey, displayDate } from "../../src/utils/dates";
-import { buildDailyPlan, getAtRiskCourses } from "../../src/planning/dailyPlanner";
+import { buildDailyPlan } from "../../src/planning/dailyPlanner";
 import { calculateStreaks } from "../../src/utils/streak";
-import { radius } from "../../src/theme/tokens";
 
 export default function Today() {
   const { state, userId } = useAuth();
@@ -49,23 +50,32 @@ export default function Today() {
   const rawPlans = useEntities("reviewPlan");
   const rawEvents = useEntities("reviewEvent");
   const rawExams = useEntities("exam");
+  const rawSessions = useEntities("studySession");
   const rawSettings = useEntities("userSettings")[0];
 
   const courses = rawCourses.map((e) => courseSchema.parse(e)) as Course[];
   const plans = rawPlans.map((e) => planSchema.parse(e)) as Plan[];
   const events = rawEvents.map((e) => eventSchema.parse(e));
   const exams = rawExams as Exam[];
+  const sessions = rawSessions as StudySession[];
   const settings = rawSettings ? settingsSchema.parse(rawSettings) : null;
 
   const [tick, setTick] = useState(Date.now());
   const [baseline, setBaseline] = useState(0);
+  const [externalEvents, setExternalEvents] = useState<UnifiedCalendarEvent[]>([]);
+
+  useEffect(() => {
+    void fetchDeviceEvents(
+      new Date(Date.now() - 86400000).toISOString(),
+      new Date(Date.now() + 14 * 86400000).toISOString(),
+    ).then(setExternalEvents);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setTick(Date.now()), 30000);
     return () => clearInterval(t);
   }, []);
 
-  // Active plans & due calculations
   const activePlans = plans.filter(
     (p) =>
       p.status === "active" &&
@@ -77,7 +87,18 @@ export default function Today() {
     (p) => new Date(p.nextReviewAt!).getTime() <= tick,
   );
 
-  // Daily plan from smart planner
+  const todaySessions = sessions.filter(
+    (s) =>
+      s.status === "planned" &&
+      dayKey(new Date(s.plannedStartAt)) === dayKey(new Date(tick)),
+  );
+
+  const sessionMinutes = todaySessions.reduce((sum, s) => {
+    const start = new Date(s.plannedStartAt).getTime();
+    const end = new Date(s.plannedEndAt).getTime();
+    return sum + Math.max(15, Math.round((end - start) / 60000));
+  }, 0);
+
   const dailyPlanItems = buildDailyPlan(
     activePlans,
     courses,
@@ -86,13 +107,8 @@ export default function Today() {
     tick,
   );
 
-  // At-risk courses for retention consolidation
-  const atRiskList = getAtRiskCourses(activePlans, courses, tick, 3);
-
-  // Streaks
   const streakStats = calculateStreaks(events, tick);
 
-  // Completed today & progress
   const completedToday = events.filter(
     (e) =>
       e.kind === "review_completed" &&
@@ -124,28 +140,59 @@ export default function Today() {
   }, [userId, totalDueToday, tick]);
 
   const totalEstimatedMinutes = duePlans.reduce((sum, p) => {
-    const crs = courses.find((c) => c.id === p.courseId);
+    const crs = courses.find((crsItem) => crsItem.id === p.courseId);
     return sum + (crs?.estimatedReviewMinutes ?? 10);
   }, 0);
+
+  const totalPlannedMinutesToday = totalEstimatedMinutes + sessionMinutes;
+
+  const conflictsToday = detectCalendarConflicts(
+    [
+      ...duePlans.map((p) => ({
+        id: p.id,
+        title: courses.find((c) => c.id === p.courseId)?.title ?? "Révision",
+        type: "review" as const,
+        startAt: String(p.nextReviewAt),
+        endAt: new Date(new Date(String(p.nextReviewAt)).getTime() + 30 * 60000).toISOString(),
+      })),
+      ...todaySessions.map((s) => ({
+        id: s.id,
+        title: courses.find((c) => c.id === s.courseId)?.title ?? "Session d'étude",
+        type: "study_session" as const,
+        startAt: s.plannedStartAt,
+        endAt: s.plannedEndAt,
+      })),
+    ],
+    externalEvents,
+  );
 
   const futureExams = exams
     .filter((e) => new Date(e.examAt).getTime() >= tick)
     .sort((a, b) => a.examAt.localeCompare(b.examAt));
 
+  const nextExam = futureExams[0];
+  const nextExamDaysLeft = nextExam
+    ? Math.ceil((new Date(nextExam.examAt).getTime() - tick) / (24 * 3600000))
+    : null;
+  const nextExamCourse = nextExam
+    ? courses.find((c) => (c.examIds ?? []).includes(nextExam.id))
+    : null;
+
+  const userName = currentSession()?.user.displayName
+    ? currentSession()!.user.displayName!.split(" ")[0]
+    : "";
+
   return (
     <Screen>
-      {/* 1. Header & Salutation */}
-      <View style={styles.topline}>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={[styles.date, { color: c.primary }]}>
-            JOURNÉE D’ÉTUDE • {format(new Date(tick), "d MMMM", { locale: fr }).toUpperCase()}
+      {/* 1. Simple, clean header */}
+      <View style={styles.header}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ fontSize: 24, fontWeight: "700", color: c.textPrimary, letterSpacing: -0.4 }}>
+            {userName ? `Bonjour ${userName}` : "Bonjour"}
           </Text>
-          <Label large>
-            Bonjour
-            {currentSession()?.user.displayName
-              ? ` ${currentSession()!.user.displayName!.split(" ")[0]}`
-              : ""}
-          </Label>
+          <Text style={{ fontSize: 13, color: c.textSecondary }}>
+            {format(new Date(tick), "EEEE d MMMM", { locale: fr })}
+          </Text>
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
@@ -156,192 +203,164 @@ export default function Today() {
                 { backgroundColor: c.warningSoft, borderColor: c.warning },
               ]}
             >
-              <Flame size={16} color={c.warning} />
+              <AppIcon icon={FireIcon} size={14} color={c.warning} />
               <Text style={[styles.streakText, { color: c.warning }]}>
                 {streakStats.currentStreak} j
               </Text>
             </View>
           )}
 
-          {state === "offline_authenticated" ? (
+          {state === "offline_authenticated" && (
             <Pill tone="warning">Hors ligne</Pill>
-          ) : (
-            <Pill tone="success">En ligne</Pill>
           )}
         </View>
       </View>
 
-      {/* 2. Reminders Disabled Alert */}
-      {settings && !settings.remindersEnabled && (
-        <Card>
-          <View style={styles.inlineTitle}>
-            <BellRing color={c.warning} size={20} />
-            <Label style={{ fontSize: 15, fontWeight: "600" }}>
-              Les rappels de révision sont désactivés
-            </Label>
-          </View>
-          <Button
-            secondary
-            title="Activer les rappels"
-            onPress={() => router.push("/settings/notifications")}
-          />
-        </Card>
-      )}
-
-      {/* 3. Hero Dashboard: Due reviews, Estimated time & Progress */}
-      <Card
-        style={[
-          styles.hero,
-          { backgroundColor: c.primary, borderColor: c.primary },
-        ]}
-      >
-        <View style={[styles.orb, { backgroundColor: c.accent }]} />
-        <View style={styles.heroHeader}>
-          <View style={[styles.heroIcon, { backgroundColor: c.accent }]}>
-            <BookOpenCheck color={c.accentText} size={26} strokeWidth={2.4} />
-          </View>
-          <Text style={[styles.heroKicker, { color: c.onPrimary }]}>
-            PROGRAMME DU JOUR
-          </Text>
-        </View>
-
-        <View style={styles.heroCountRow}>
-          <Text style={[styles.heroNumber, { color: c.onPrimary }]}>
-            {duePlans.length}
-          </Text>
-          <View style={{ gap: 2, paddingBottom: 7 }}>
-            <Text style={[styles.heroLabel, { color: c.onPrimary }]}>
-              révision{duePlans.length > 1 ? "s" : ""} à faire
+      {/* 2. Compact Today Summary Card */}
+      <Card style={{ padding: 14, gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ gap: 2 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: c.textPrimary, letterSpacing: -0.2 }}>
+              {duePlans.length} {duePlans.length > 1 ? "révisions" : "révision"}
             </Text>
-            <Text style={[styles.heroMeta, { color: c.onPrimary }]}>
-              ~{totalEstimatedMinutes} min d'étude
-              {settings?.dailyStudyMinutes
-                ? ` • objectif ${settings.dailyStudyMinutes} min`
-                : ""}
+            <Text style={{ fontSize: 13, color: c.textSecondary }}>
+              ~{totalPlannedMinutesToday} min
+              {settings?.dailyStudyMinutes ? ` · objectif ${settings.dailyStudyMinutes} min` : ""}
             </Text>
           </View>
+
+          {duePlans.length > 0 && duePlans[0] && (
+            <Button
+              size="sm"
+              variant="primary"
+              title="Démarrer"
+              icon={PlayIcon}
+              onPress={() => router.push(`/session/${duePlans[0]!.courseId}`)}
+            />
+          )}
         </View>
 
         {baseline > 0 && (
-          <View style={{ gap: 6, marginTop: 4 }}>
-            <Text style={[styles.progressLabel, { color: c.onPrimary }]}>
-              {completedToday} sur {Math.max(baseline, completedToday)} révision(s) complétée(s) aujourd'hui
-            </Text>
-            <View
-              style={[
-                styles.progressTrack,
-                { backgroundColor: `${c.onPrimary}33` },
-              ]}
-            >
+          <View style={{ gap: 4 }}>
+            <View style={[styles.progressTrack, { backgroundColor: c.border }]}>
               <View
                 style={{
-                  height: 8,
+                  height: 4,
                   width: `${Math.min(100, (completedToday / Math.max(1, baseline)) * 100)}%`,
-                  backgroundColor: c.accent,
-                  borderRadius: 8,
+                  backgroundColor: c.primary,
+                  borderRadius: 4,
                 }}
               />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ fontSize: 11, color: c.textSecondary }}>
+                {completedToday} terminée{completedToday > 1 ? "s" : ""}
+              </Text>
+              <Text style={{ fontSize: 11, color: c.textSecondary }}>
+                sur {baseline}
+              </Text>
             </View>
           </View>
         )}
 
-        {duePlans.length > 0 && duePlans[0] && (
-          <View style={{ marginTop: 10 }}>
-            <Button
-              title="Commencer ma session"
-              icon={Play}
-              onPress={() => router.push(`/session/${duePlans[0]!.courseId}`)}
-            />
+        {/* Inline contextual alerts (conflicts, next exam) */}
+        {(conflictsToday.length > 0 || (nextExam && nextExamDaysLeft !== null)) && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, paddingTop: 2 }}>
+            {conflictsToday.length > 0 && (
+              <Pressable
+                onPress={() => router.push("/(tabs)/calendar")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: c.warningSoft,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 6,
+                }}
+              >
+                <AppIcon icon={AlertCircleIcon} size={12} color={c.warning} />
+                <Text style={{ fontSize: 11, fontWeight: "600", color: c.warning }}>
+                  {conflictsToday.length} conflit{conflictsToday.length > 1 ? "s" : ""}
+                </Text>
+              </Pressable>
+            )}
+
+            {nextExam && nextExamDaysLeft !== null && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: c.primarySoft,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 6,
+                }}
+              >
+                <AppIcon icon={GraduationCapIcon} size={12} color={c.primary} />
+                <Text style={{ fontSize: 11, fontWeight: "600", color: c.primary }}>
+                  {nextExamCourse?.title ?? nextExam.title} · J-{nextExamDaysLeft}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </Card>
 
-      {/* 4. Quick Action Buttons */}
-      <View style={styles.quickActionsRow}>
-        <Pressable
-          onPress={() => router.push("/(tabs)/library")}
-          style={[styles.quickActionBtn, { backgroundColor: c.surface, borderColor: c.border }]}
-        >
-          <Plus size={18} color={c.primary} />
-          <Text style={[styles.quickActionText, { color: c.textPrimary }]}>Ajouter cours</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => router.push("/(tabs)/calendar")}
-          style={[styles.quickActionBtn, { backgroundColor: c.surface, borderColor: c.border }]}
-        >
-          <CalendarIcon size={18} color={c.primary} />
-          <Text style={[styles.quickActionText, { color: c.textPrimary }]}>Voir agenda</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => router.push("/stats")}
-          style={[styles.quickActionBtn, { backgroundColor: c.surface, borderColor: c.border }]}
-        >
-          <BarChart3 size={18} color={c.primary} />
-          <Text style={[styles.quickActionText, { color: c.textPrimary }]}>Statistiques</Text>
-        </Pressable>
-      </View>
-
-      {/* 5. Memory Curve */}
-      <MemoryCurve plans={plans} now={tick} />
-
-      {/* 6. Section "À consolider" (At-risk courses, non-anxiety provoking) */}
-      {atRiskList.length > 0 && (
-        <View style={{ gap: 12 }}>
-          <SectionTitle
-            eyebrow="Consolidation"
-            title="À consolider"
-          />
-          <Label muted style={{ fontSize: 14 }}>
-            Ces notions méritent un rappel pour maintenir une rétention optimale :
-          </Label>
-          {atRiskList.map(({ course, retention }) => (
-            <Card
-              key={course.id}
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <View style={{ flex: 1, gap: 4 }}>
-                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                  <Pill tone="warning">
-                    Mémoire : {Math.round(retention * 100)} %
-                  </Pill>
-                  <Text style={{ fontSize: 12, color: c.textSecondary }}>
-                    ~{course.estimatedReviewMinutes || 10} min
+      {/* Planned Study Sessions */}
+      {todaySessions.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <SectionTitle title="Sessions d’étude aujourd’hui" />
+          {todaySessions.map((sess) => {
+            const course = courses.find((crs) => crs.id === sess.courseId);
+            const start = new Date(sess.plannedStartAt);
+            const timeStr = format(start, "HH:mm");
+            return (
+              <Card
+                key={sess.id}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                }}
+              >
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <AppIcon icon={Clock01Icon} size={13} color={c.primary} />
+                    <Pill tone="primary">Session {timeStr}</Pill>
+                  </View>
+                  <Text style={{ fontWeight: "600", fontSize: 14, color: c.textPrimary }}>
+                    {course?.title ?? "Session d'étude"}
                   </Text>
                 </View>
-                <Label style={{ fontWeight: "700", fontSize: 16 }}>
-                  {course.title}
-                </Label>
-              </View>
-              <Button
-                secondary
-                title="Session"
-                icon={Play}
-                onPress={() => router.push(`/session/${course.id}`)}
-              />
-            </Card>
-          ))}
+                {course && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    title="Démarrer"
+                    icon={PlayIcon}
+                    onPress={() => router.push(`/session/${course.id}`)}
+                  />
+                )}
+              </Card>
+            );
+          })}
         </View>
       )}
 
-      {/* 7. Focus: Due courses */}
+      {/* Memory Curve */}
+      <MemoryCurve plans={plans} now={tick} />
+
+      {/* Due Courses */}
       {!courses.length ? (
-        <Card>
-          <View style={[styles.emptyIcon, { backgroundColor: c.primarySoft }]}>
-            <Plus color={c.primary} size={30} />
-          </View>
-          <Label large>Crée ton premier cours.</Label>
-          <Label muted>
-            Ajoute ton premier cours et MémoCycle organisera automatiquement ta
-            mémoire et tes révisions.
-          </Label>
+        <Card style={{ alignItems: "center", paddingVertical: 24, gap: 10 }}>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: c.textPrimary }}>Aucun cours enregistré</Text>
           <Button
-            icon={Plus}
+            size="sm"
+            icon={Add01Icon}
             title="Ajouter un cours"
             onPress={() => router.push("/(tabs)/library")}
           />
@@ -349,27 +368,43 @@ export default function Today() {
       ) : (
         <>
           <SectionTitle
-            eyebrow="Aujourd'hui"
-            title={duePlans.length ? "À réviser maintenant" : "Tout est à jour pour aujourd'hui"}
+            title="À réviser"
+            action={
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={Add01Icon}
+                title="Cours"
+                onPress={() => router.push("/(tabs)/library")}
+              />
+            }
           />
-          {duePlans.map((p) => (
-            <CourseCard
-              key={p.id}
-              course={courses.find((c) => c.id === p.courseId)!}
-              plan={p}
-            />
-          ))}
+          {duePlans.length > 0 ? (
+            duePlans.map((p) => (
+              <CourseCard
+                key={p.id}
+                course={courses.find((item) => item.id === p.courseId)!}
+                plan={p}
+              />
+            ))
+          ) : (
+            <Card style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+              <Text style={{ fontSize: 13, color: c.textSecondary }}>
+                Toutes les révisions sont à jour.
+              </Text>
+            </Card>
+          )}
 
-          {/* Intelligent Daily Plan - Upcoming */}
+          {/* Upcoming planned reviews */}
           {dailyPlanItems.filter((i) => !i.overdue && new Date(i.scheduledAt).getTime() > tick).length > 0 && (
             <>
-              <SectionTitle eyebrow="Planificateur intelligent" title="Prochaines révisions planifiées" />
+              <SectionTitle title="À venir" />
               {dailyPlanItems
                 .filter((i) => !i.overdue && new Date(i.scheduledAt).getTime() > tick)
                 .slice(0, 4)
                 .map((item) => {
-                  const course = courses.find((c) => c.id === item.courseId);
-                  const plan = plans.find((p) => p.id === item.reviewPlanId);
+                  const course = courses.find((itemCourse) => itemCourse.id === item.courseId);
+                  const plan = plans.find((itemPlan) => itemPlan.id === item.reviewPlanId);
                   if (!course) return null;
                   return (
                     <CourseCard
@@ -384,10 +419,10 @@ export default function Today() {
         </>
       )}
 
-      {/* 8. Upcoming Exams */}
+      {/* Upcoming Exams */}
       {futureExams.length > 0 && (
-        <View style={{ gap: 12 }}>
-          <SectionTitle eyebrow="Objectifs d'examen" title="Prochains examens" />
+        <View style={{ gap: 8 }}>
+          <SectionTitle title="Examens" />
           {futureExams.slice(0, 2).map((exam) => {
             const daysLeft = Math.ceil(
               (new Date(exam.examAt).getTime() - tick) / (24 * 3600000),
@@ -399,22 +434,24 @@ export default function Today() {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
                 }}
               >
-                <View style={{ flex: 1, gap: 4 }}>
-                  <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                    <Pill tone={daysLeft <= 7 ? "warning" : "primary"}>
-                      {daysLeft <= 0 ? "Aujourd'hui" : `Dans ${daysLeft} jour${daysLeft > 1 ? "s" : ""}`}
-                    </Pill>
-                  </View>
-                  <Label style={{ fontWeight: "700", fontSize: 16 }}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={{ fontWeight: "600", fontSize: 14, color: c.textPrimary }}>
                     {exam.title}
-                  </Label>
-                  <Label muted style={{ fontSize: 13 }}>
+                  </Text>
+                  <Text style={{ fontSize: 12, color: c.textSecondary }}>
                     {displayDate(exam.examAt)}
-                  </Label>
+                  </Text>
                 </View>
-                <GraduationCap size={28} color={c.warning} />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Pill tone={daysLeft <= 7 ? "warning" : "primary"}>
+                    {daysLeft <= 0 ? "Aujourd'hui" : `J-${daysLeft}`}
+                  </Pill>
+                  <AppIcon icon={GraduationCapIcon} size={18} color={c.warning} />
+                </View>
               </Card>
             );
           })}
@@ -425,123 +462,29 @@ export default function Today() {
 }
 
 const styles = StyleSheet.create({
-  topline: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
-  date: {
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-  },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
     borderWidth: 1,
   },
   streakText: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  inlineTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  hero: {
-    minHeight: 205,
-    overflow: "hidden",
-    padding: 22,
-    gap: 12,
-  },
-  orb: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    right: -44,
-    top: -58,
-    opacity: 0.18,
-  },
-  heroHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-  },
-  heroIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroKicker: {
     fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.35,
-    opacity: 0.86,
-  },
-  heroCountRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 12,
-    marginTop: 2,
-  },
-  heroNumber: {
-    fontSize: 56,
-    lineHeight: 60,
-    fontWeight: "900",
-    letterSpacing: -2.5,
-  },
-  heroLabel: {
-    fontSize: 19,
-    fontWeight: "800",
-  },
-  heroMeta: {
-    fontSize: 13,
-    fontWeight: "600",
-    opacity: 0.8,
-  },
-  progressLabel: {
-    fontSize: 13,
     fontWeight: "700",
-    opacity: 0.88,
   },
   progressTrack: {
-    height: 8,
-    borderRadius: 8,
+    height: 4,
+    borderRadius: 4,
     overflow: "hidden",
   },
-  quickActionsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  quickActionBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: radius.card,
-    borderWidth: 1,
-  },
-  quickActionText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });
+

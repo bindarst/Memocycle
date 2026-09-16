@@ -32,6 +32,8 @@ model User {
   mutations ProcessedMutation[]
   changes SyncChange[]
   settings UserSettings?
+  calendarConnections CalendarConnection[]
+  studySessions StudySession[]
   @@map("users")
 }
 model AuthIdentity {
@@ -149,6 +151,16 @@ model Course {
   plan ReviewPlan?
   events ReviewEvent[]
   studyItems StudyItem[]
+  studySessions StudySession[]
+  preferredStudyMethod String? @map("preferred_study_method")
+  methodSelectionMode String @default("automatic") @map("method_selection_mode")
+  contentType String @default("mixed") @map("content_type")
+  priorKnowledge String @default("none") @map("prior_knowledge")
+  targetDate DateTime? @db.Timestamptz @map("target_date")
+  weeklyStudyTargetMinutes Int? @map("weekly_study_target_minutes")
+  priority Int @default(2)
+  tags Json? @default("[]")
+  examIds Json? @default("[]") @map("exam_ids")
   @@unique([id,userId])
   @@index([userId,updatedAt])
   @@index([subjectId])
@@ -244,6 +256,9 @@ model ReviewEvent {
   delayMinutes Int @default(0) @map("delay_minutes")
   deviceId String? @db.Uuid @map("device_id")
   confidence String?
+  durationSeconds Int? @map("duration_seconds")
+  sessionType String @default("scheduled_review") @map("session_type")
+  studyMethod String? @map("study_method")
   createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
   updatedAt DateTime @default(now()) @db.Timestamptz @map("updated_at")
   deletedAt DateTime? @db.Timestamptz @map("deleted_at")
@@ -296,3 +311,66 @@ model SyncChange {
   @@unique([userId,syncSeq])
   @@map("sync_changes")
 }
+
+model CalendarConnection {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  provider String // "google", "microsoft", "device"
+  providerAccountId String @map("provider_account_id")
+  accountLabel String @map("account_label")
+  syncMode String @default("export_only") @map("sync_mode") // "disabled", "export_only", "two_way"
+  calendarId String? @map("calendar_id")
+  enabled Boolean @default(true)
+  encryptedAccessToken String? @map("encrypted_access_token")
+  encryptedRefreshToken String? @map("encrypted_refresh_token")
+  tokenExpiresAt DateTime? @db.Timestamptz @map("token_expires_at")
+  lastSyncAt DateTime? @db.Timestamptz @map("last_sync_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  eventLinks CalendarEventLink[]
+  @@unique([userId,provider,providerAccountId])
+  @@index([userId])
+  @@map("calendar_connections")
+}
+
+model CalendarEventLink {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  connectionId String? @db.Uuid @map("connection_id")
+  provider String
+  localEntityType String @map("local_entity_type") // "review", "exam", "study_session"
+  localEntityId String @db.Uuid @map("local_entity_id")
+  externalEventId String @map("external_event_id")
+  externalCalendarId String @map("external_calendar_id")
+  lastSyncedAt DateTime @default(now()) @db.Timestamptz @map("last_synced_at")
+  externalUpdatedAt DateTime? @db.Timestamptz @map("external_updated_at")
+  connection CalendarConnection? @relation(fields:[connectionId],references:[id],onDelete:Cascade)
+  @@unique([provider,externalCalendarId,externalEventId])
+  @@index([userId,localEntityType,localEntityId])
+  @@map("calendar_event_links")
+}
+
+model StudySession {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  courseId String @db.Uuid @map("course_id")
+  plannedStartAt DateTime @db.Timestamptz @map("planned_start_at")
+  plannedEndAt DateTime @db.Timestamptz @map("planned_end_at")
+  actualStartAt DateTime? @db.Timestamptz @map("actual_start_at")
+  actualEndAt DateTime? @db.Timestamptz @map("actual_end_at")
+  method String?
+  status String @default("planned") // "planned", "completed", "cancelled"
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  course Course @relation(fields:[courseId,userId],references:[id,userId],onDelete:Cascade)
+  @@unique([id,userId])
+  @@index([userId,updatedAt])
+  @@index([courseId])
+  @@index([plannedStartAt])
+  @@map("study_sessions")
+}
+

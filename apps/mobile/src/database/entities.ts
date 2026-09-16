@@ -53,6 +53,16 @@ export const planSchema = entitySchema.extend({
   lastRating: z.string().nullable().optional(),
 });
 
+import {
+  studySessionSchema,
+  studyMethodSchema,
+  reviewSessionTypeSchema,
+  type StudySession as StudySessionContract,
+} from "@memocycle/contracts";
+
+export const studySessionEntitySchema = studySessionSchema;
+export type StudySession = StudySessionContract;
+
 export const eventSchema = entitySchema.extend({
   courseId: z.string(),
   reviewPlanId: z.string(),
@@ -64,6 +74,9 @@ export const eventSchema = entitySchema.extend({
   delayMinutes: z.number(),
   confidence: z.string().nullable().optional(),
   deviceId: z.string().nullable().optional(),
+  durationSeconds: z.number().int().min(0).optional(),
+  sessionType: reviewSessionTypeSchema.optional(),
+  studyMethod: studyMethodSchema.optional(),
 });
 
 export type Course = z.infer<typeof courseSchema>;
@@ -74,4 +87,5 @@ export type ReviewEvent = z.infer<typeof eventSchema>;
 export type StudyItem = z.infer<typeof studyItemSchema>;
 export type Exam = z.infer<typeof examSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
+
 

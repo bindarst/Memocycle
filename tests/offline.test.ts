@@ -170,7 +170,7 @@ describe("real SQLite offline workflow", () => {
     );
     await migrate(old as unknown as SQLiteDatabase);
     expect(await old.getFirstAsync("PRAGMA user_version")).toEqual({
-      user_version: 3,
+      user_version: 4,
     });
     expect(
       await old.getFirstAsync<{ data: string; needs_apply: number }>(

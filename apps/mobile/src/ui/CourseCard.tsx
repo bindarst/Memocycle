@@ -1,11 +1,15 @@
 import React from "react";
 import { router } from "expo-router";
-import { View } from "react-native";
-import { BookOpen, ChevronRight, Clock3, BrainCircuit } from "lucide-react-native";
-import { Card, Label, Button, Pill, useEntities, usePalette } from "./components";
+import { View, Text } from "react-native";
+import {
+  Book01Icon,
+  ChevronRightIcon,
+  Clock01Icon,
+} from "@hugeicons/core-free-icons";
+import { Card, Pill, useEntities, usePalette } from "./components";
+import { AppIcon } from "./Icon";
 import type { Course, Plan } from "../database/entities";
 import { displayDate, lateness } from "../utils/dates";
-import { estimatePlanRetention } from "../review/fsrsScheduler";
 
 export function CourseCard({ course, plan }: { course: Course; plan?: Plan }) {
   const c = usePalette();
@@ -13,99 +17,104 @@ export function CourseCard({ course, plan }: { course: Course; plan?: Plan }) {
   const overdue =
     !!plan?.nextReviewAt && new Date(plan.nextReviewAt).getTime() < Date.now();
 
-  const retentionPercent = plan
-    ? Math.round(estimatePlanRetention(plan, Date.now()) * 100)
+  const stepText = plan?.nextReviewAt
+    ? plan.schedulerType === "fsrs"
+      ? `Rép. ${(plan.reps ?? 0) + 1}`
+      : `Rév. ${plan.currentStep}/6`
     : null;
 
+  const dateText = plan?.nextReviewAt
+    ? overdue
+      ? lateness(plan.nextReviewAt)
+      : displayDate(plan.nextReviewAt)
+    : course.status === "completed"
+    ? "Terminé"
+    : course.status === "archived"
+    ? "Archivé"
+    : "Non étudié";
+
   return (
-    <Card>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
+    <Card
+      onPress={() => router.push(`/course/${course.id}`)}
+      style={{ paddingVertical: 12, paddingHorizontal: 14 }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View
           style={{
-            width: 46,
-            height: 46,
-            borderRadius: 15,
+            width: 38,
+            height: 38,
+            borderRadius: 10,
             backgroundColor: c.primarySoft,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <BookOpen color={c.primary} size={23} />
+          <AppIcon icon={Book01Icon} color={c.primary} size={18} />
         </View>
+
         <View style={{ flex: 1, gap: 2 }}>
-          <Label style={{ fontWeight: "800", fontSize: 17 }}>
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: c.textPrimary,
+              letterSpacing: -0.2,
+            }}
+            numberOfLines={1}
+          >
             {course.title}
-          </Label>
-          <Label muted style={{ fontSize: 13 }}>
-            {String(subject?.title ?? "Sans matière")}
-          </Label>
-        </View>
-        {overdue ? (
-          <Pill tone="warning">En retard</Pill>
-        ) : plan?.nextReviewAt ? (
-          <Pill tone="primary">Planifié</Pill>
-        ) : null}
-      </View>
-
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Clock3 color={c.textSecondary} size={15} />
-          <Label muted style={{ fontSize: 13 }}>
-            ~{course.estimatedReviewMinutes || 10} min
-          </Label>
-        </View>
-
-        {retentionPercent !== null && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <BrainCircuit color={c.textSecondary} size={15} />
-            <Label muted style={{ fontSize: 13 }}>
-              Mémoire : {retentionPercent} %
-            </Label>
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text
+              style={{ fontSize: 13, color: c.textSecondary }}
+              numberOfLines={1}
+            >
+              {subject?.title ? String(subject.title) : "Sans matière"}
+            </Text>
+            {course.estimatedReviewMinutes ? (
+              <>
+                <Text style={{ fontSize: 12, color: c.border }}>•</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <AppIcon icon={Clock01Icon} color={c.textSecondary} size={12} />
+                  <Text style={{ fontSize: 12, color: c.textSecondary }}>
+                    {course.estimatedReviewMinutes} min
+                  </Text>
+                </View>
+              </>
+            ) : null}
           </View>
-        )}
-      </View>
-
-      {plan?.nextReviewAt ? (
-        <View style={{ gap: 2 }}>
-          <Label muted style={{ fontSize: 13 }}>
-            {plan.schedulerType === "fsrs"
-              ? `Répétition ${(plan.reps ?? 0) + 1}`
-              : `Révision ${plan.currentStep}/6`}
-          </Label>
-          <Label style={{ fontWeight: "700" }}>
-            {new Date(plan.nextReviewAt).getTime() < Date.now()
-              ? lateness(plan.nextReviewAt)
-              : displayDate(plan.nextReviewAt)}
-          </Label>
         </View>
-      ) : (
-        <Label muted>
-          {course.status === "completed"
-            ? "Cycle terminé"
-            : course.status === "archived"
-              ? "Archivé"
-              : "Pas encore étudié"}
-        </Label>
-      )}
 
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        {plan?.nextReviewAt && (
-          <View style={{ flex: 1 }}>
-            <Button
-              title="Session"
-              onPress={() => router.push(`/session/${course.id}`)}
-            />
-          </View>
-        )}
-        <View style={{ flex: 1 }}>
-          <Button
-            secondary
-            icon={ChevronRight}
-            title={plan?.nextReviewAt ? "Fiche" : "Ouvrir le cours"}
-            onPress={() => router.push(`/course/${course.id}`)}
-          />
+        <View style={{ alignItems: "flex-end", gap: 3 }}>
+          {overdue ? (
+            <Pill tone="warning">En retard</Pill>
+          ) : (
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "500",
+                color: plan?.nextReviewAt ? c.textPrimary : c.textSecondary,
+              }}
+            >
+              {dateText}
+            </Text>
+          )}
+          {stepText && !overdue && (
+            <Text style={{ fontSize: 11, color: c.textSecondary }}>
+              {stepText}
+            </Text>
+          )}
         </View>
+
+        <AppIcon icon={ChevronRightIcon} size={16} color={c.textSecondary} />
       </View>
     </Card>
   );
 }
+

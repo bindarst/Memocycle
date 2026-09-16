@@ -5,6 +5,7 @@ export const tables: Record<EntityType, string> = {
   course: "courses",
   exam: "exams",
   studyItem: "study_items",
+  studySession: "study_sessions",
   reviewPlan: "review_plans",
   reviewEvent: "review_events",
   userSettings: "user_settings",
@@ -17,6 +18,8 @@ const foreignKeys: Record<string, string> = {
   exams:
     ", FOREIGN KEY(owner_user_id,subject_id) REFERENCES subjects(owner_user_id,id) ON DELETE CASCADE, FOREIGN KEY(owner_user_id,module_id,subject_id) REFERENCES modules(owner_user_id,id,subject_id) ON DELETE CASCADE",
   study_items:
+    ", FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE",
+  study_sessions:
     ", FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE",
   review_plans:
     ", FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE",
@@ -37,6 +40,7 @@ CREATE TABLE ${table} (
  review_plan_id TEXT GENERATED ALWAYS AS (json_extract(data,'$.reviewPlanId')) VIRTUAL,
  next_review_at TEXT GENERATED ALWAYS AS (json_extract(data,'$.nextReviewAt')) VIRTUAL,
  completed_at TEXT GENERATED ALWAYS AS (json_extract(data,'$.completedAt')) VIRTUAL,
+ planned_start_at TEXT GENERATED ALWAYS AS (json_extract(data,'$.plannedStartAt')) VIRTUAL,
  PRIMARY KEY(owner_user_id,id), UNIQUE(owner_user_id,id,subject_id), UNIQUE(owner_user_id,id,course_id)
  ${foreignKeys[table] ?? ""}
 );

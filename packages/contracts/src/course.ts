@@ -26,6 +26,31 @@ export const moduleInput = z
     archivedAt: z.string().datetime().nullable().default(null),
   })
   .strict();
+import {
+  contentTypeSchema,
+  methodSelectionModeSchema,
+  priorKnowledgeSchema,
+  studyMethodSchema,
+} from "./studyMethod";
+
+export const courseAttachmentTypeSchema = z.enum([
+  "pdf",
+  "image",
+  "link",
+  "audio",
+]);
+export type CourseAttachmentType = z.infer<typeof courseAttachmentTypeSchema>;
+
+export const courseAttachmentSchema = z.object({
+  id: z.string().uuid(),
+  courseId: z.string().uuid(),
+  type: courseAttachmentTypeSchema,
+  title: z.string().trim().min(1).max(150),
+  url: z.string().url(),
+  createdAt: z.string().datetime(),
+});
+export type CourseAttachment = z.infer<typeof courseAttachmentSchema>;
+
 export const courseInput = z
   .object({
     title,
@@ -34,6 +59,15 @@ export const courseInput = z
     moduleId: z.string().uuid().nullable().default(null),
     estimatedReviewMinutes: z.number().int().min(1).max(600).default(10),
     importance: z.number().int().min(1).max(3).default(2),
+    preferredStudyMethod: studyMethodSchema.nullable().default(null),
+    methodSelectionMode: methodSelectionModeSchema.default("automatic"),
+    contentType: contentTypeSchema.default("mixed"),
+    priorKnowledge: priorKnowledgeSchema.default("none"),
+    targetDate: z.string().datetime().nullable().default(null),
+    weeklyStudyTargetMinutes: z.number().int().min(1).max(10000).nullable().default(null),
+    priority: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(2),
+    examIds: z.array(z.string().uuid()).default([]),
+    tags: z.array(z.string().trim().max(50)).default([]),
     archivedAt: z.string().datetime().nullable().default(null),
   })
   .strict();

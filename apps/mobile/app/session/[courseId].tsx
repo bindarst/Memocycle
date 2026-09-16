@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Play, Pause, RotateCcw, CheckCircle2, X, Layers } from "lucide-react-native";
+import {
+  PlayIcon,
+  PauseIcon,
+  RotateCcwIcon,
+  CheckmarkCircle01Icon,
+  Cancel01Icon,
+  Layers01Icon,
+} from "@hugeicons/core-free-icons";
 import type { ReviewRating } from "@memocycle/contracts";
 import type { Course, StudyItem, Subject, Module } from "../../src/database/entities";
 import { newId } from "../../src/utils/ids";
@@ -9,17 +16,19 @@ import {
   Screen,
   Label,
   Button,
+  IconButton,
   Card,
   Pill,
   ErrorText,
   useAction,
   SectionTitle,
+  usePalette,
 } from "../../src/ui/components";
+import { AppIcon } from "../../src/ui/Icon";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { find, all } from "../../src/database/repository";
 import { completeReview } from "../../src/review/reviewService";
 import { radius } from "../../src/theme/tokens";
-import { usePalette } from "../../src/ui/components";
 
 export default function StudySessionScreen() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -66,8 +75,8 @@ export default function StudySessionScreen() {
           if (active) setModule(m);
         }
 
-        const allItems = (await all("studyItem", userId)) as StudyItem[];
-        const courseItems = allItems
+        const allStudyItems = (await all("studyItem", userId)) as StudyItem[];
+        const courseItems = allStudyItems
           .filter((it) => it.courseId === courseId && !it.archivedAt)
           .sort((a, b) => a.position - b.position);
         if (active) setItems(courseItems);
@@ -161,14 +170,14 @@ export default function StudySessionScreen() {
       setSessionCompleted(true);
       setTimeout(() => {
         router.replace("/(tabs)/today");
-      }, 1200);
+      }, 1000);
     });
   };
 
   if (loading || !course) {
     return (
       <Screen>
-        <Label>Chargement de la session...</Label>
+        <Label>Chargement...</Label>
       </Screen>
     );
   }
@@ -179,14 +188,22 @@ export default function StudySessionScreen() {
     <Screen>
       {/* Header bar */}
       <View style={styles.headerRow}>
-        <Button secondary title="Quitter" onPress={() => router.back()} icon={X} />
+        <IconButton
+          icon={Cancel01Icon}
+          accessibilityLabel="Quitter"
+          onPress={() => router.back()}
+        />
         <Pill tone={isRunning ? "success" : "primary"}>
-          {isRunning ? "Session en cours" : "En pause"}
+          {isRunning ? "En cours" : "En pause"}
         </Pill>
       </View>
 
-      <View style={{ gap: 4 }}>
-        {subject && <Label muted>{subject.title}{module ? ` • ${module.title}` : ""}</Label>}
+      <View style={{ gap: 2 }}>
+        {subject && (
+          <Text style={{ fontSize: 13, color: palette.textSecondary }}>
+            {subject.title}{module ? ` • ${module.title}` : ""}
+          </Text>
+        )}
         <Label large>{course.title}</Label>
       </View>
 
@@ -194,7 +211,7 @@ export default function StudySessionScreen() {
       <Card style={styles.timerCard}>
         <View style={styles.timerHeader}>
           <Text style={[styles.timerModeLabel, { color: palette.textSecondary }]}>
-            {isFocusMode ? `MODE FOCUS (${focusTargetMinutes} MIN)` : "CHRONOMÈTRE DE TRAVAIL"}
+            {isFocusMode ? `FOCUS ${focusTargetMinutes} MIN` : "CHRONO"}
           </Text>
           <Pressable
             onPress={() => {
@@ -204,7 +221,7 @@ export default function StudySessionScreen() {
             }}
           >
             <Text style={[styles.modeToggle, { color: palette.primary }]}>
-              {isFocusMode ? "Changer en libre" : "Passer en Focus"}
+              {isFocusMode ? "Chrono libre" : "Mode Focus"}
             </Text>
           </Pressable>
         </View>
@@ -230,8 +247,8 @@ export default function StudySessionScreen() {
                 <Text
                   style={{
                     color: focusTargetMinutes === mins ? palette.primary : palette.textSecondary,
-                    fontWeight: "700",
-                    fontSize: 13,
+                    fontWeight: "600",
+                    fontSize: 12,
                   }}
                 >
                   {mins}m
@@ -243,57 +260,53 @@ export default function StudySessionScreen() {
 
         <View style={styles.timerControls}>
           <Button
+            size="md"
             title={isRunning ? "Pause" : "Démarrer"}
             onPress={handleStartPause}
-            icon={isRunning ? Pause : Play}
+            icon={isRunning ? PauseIcon : PlayIcon}
           />
           <Button
-            secondary
+            size="md"
+            variant="secondary"
             title="Réinitialiser"
             onPress={handleResetTimer}
-            icon={RotateCcw}
+            icon={RotateCcwIcon}
           />
         </View>
       </Card>
 
       {/* Learning Items Section */}
       {items.length > 0 && currentItem ? (
-        <View style={{ gap: 14 }}>
+        <View style={{ gap: 10 }}>
           <SectionTitle
-            eyebrow="Rappel actif"
-            title={`Fiche ${currentItemIndex + 1} sur ${items.length}`}
+            title={`Fiche ${currentItemIndex + 1} / ${items.length}`}
           />
 
-          <Card style={{ gap: 16 }}>
+          <Card style={{ gap: 12, padding: 16 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <Pill tone="primary">
                 {currentItem.type === "flashcard"
                   ? "Flashcard"
                   : currentItem.type === "question"
-                    ? "Question"
-                    : currentItem.type === "cloze"
-                      ? "Texte à trous"
-                      : "Note"}
+                  ? "Question"
+                  : currentItem.type === "cloze"
+                  ? "Texte à trous"
+                  : "Note"}
               </Pill>
               {ratings[currentItem.id] && (
                 <Pill tone="success">
-                  Évalué : {ratings[currentItem.id]}
+                  {ratings[currentItem.id]}
                 </Pill>
               )}
             </View>
 
             {/* Front / Question */}
-            <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: palette.textSecondary, textTransform: "uppercase" }}>
-                {currentItem.type === "question" ? "Question" : "Recto"}
-              </Text>
-              <Text style={{ fontSize: 18, fontWeight: "600", color: palette.textPrimary, lineHeight: 26 }}>
-                {currentItem.front || currentItem.back || "Contenu de la fiche"}
-              </Text>
-            </View>
+            <Text style={{ fontSize: 16, fontWeight: "600", color: palette.textPrimary, lineHeight: 22 }}>
+              {currentItem.front || currentItem.back || "Contenu de la fiche"}
+            </Text>
 
             {currentItem.hint && (
-              <Text style={{ fontSize: 14, color: palette.warning, fontStyle: "italic" }}>
+              <Text style={{ fontSize: 13, color: palette.warning, fontStyle: "italic" }}>
                 Indice : {currentItem.hint}
               </Text>
             )}
@@ -304,23 +317,24 @@ export default function StudySessionScreen() {
                 <View
                   style={{
                     backgroundColor: palette.surfaceMuted,
-                    padding: 16,
+                    padding: 12,
                     borderRadius: radius.card,
                     borderWidth: 1,
                     borderColor: palette.border,
-                    gap: 6,
+                    gap: 4,
                   }}
                 >
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: palette.textSecondary, textTransform: "uppercase" }}>
-                    Réponse
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: palette.textSecondary }}>
+                    RÉPONSE
                   </Text>
-                  <Text style={{ fontSize: 17, color: palette.textPrimary, lineHeight: 24 }}>
+                  <Text style={{ fontSize: 15, color: palette.textPrimary, lineHeight: 20 }}>
                     {currentItem.back}
                   </Text>
                 </View>
               ) : (
                 <Button
-                  secondary
+                  size="sm"
+                  variant="secondary"
                   title="Afficher la réponse"
                   onPress={() => setShowAnswer(true)}
                 />
@@ -329,10 +343,7 @@ export default function StudySessionScreen() {
 
             {/* Rating Buttons */}
             {showAnswer && (
-              <View style={{ gap: 10, marginTop: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: palette.textSecondary, textAlign: "center" }}>
-                  Comment évalues-tu ton rappel ?
-                </Text>
+              <View style={{ gap: 6, marginTop: 4 }}>
                 <View style={styles.ratingGrid}>
                   <Pressable
                     style={[styles.ratingBtn, { backgroundColor: palette.dangerSoft, borderColor: palette.danger }]}
@@ -363,9 +374,10 @@ export default function StudySessionScreen() {
             )}
 
             {/* Navigation between items */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
               <Button
-                secondary
+                size="sm"
+                variant="ghost"
                 disabled={currentItemIndex === 0}
                 title="Précédent"
                 onPress={() => {
@@ -374,7 +386,8 @@ export default function StudySessionScreen() {
                 }}
               />
               <Button
-                secondary
+                size="sm"
+                variant="ghost"
                 disabled={currentItemIndex >= items.length - 1}
                 title="Suivant"
                 onPress={() => {
@@ -386,35 +399,25 @@ export default function StudySessionScreen() {
           </Card>
         </View>
       ) : (
-        <Card style={{ alignItems: "center", padding: 24, gap: 12 }}>
-          <Layers size={36} color={palette.textSecondary} />
-          <Label style={{ textAlign: "center" }}>
-            Aucune fiche ni question créée pour ce cours.
+        <Card style={{ alignItems: "center", padding: 20, gap: 8 }}>
+          <AppIcon icon={Layers01Icon} size={28} color={palette.textSecondary} />
+          <Label muted style={{ textAlign: "center", fontSize: 13 }}>
+            Aucune fiche pour ce cours.
           </Label>
-          <Label muted style={{ textAlign: "center", fontSize: 14 }}>
-            Tu peux réviser tes notes ou ton support de cours pendant que le minuteur tourne.
-          </Label>
-          <Button
-            secondary
-            title="Ajouter des fiches au cours"
-            onPress={() => router.push(`/course/${course.id}`)}
-          />
         </Card>
       )}
 
       {/* Completion Section */}
-      <Card style={{ gap: 12, marginTop: 12 }}>
-        <Label large style={{ fontSize: 18 }}>Valider la révision</Label>
-        <Label muted>
-          Une session terminée et validée enregistre tes progrès et reprogramme la prochaine révision avec le moteur adaptatif.
-        </Label>
+      <View style={{ marginTop: 8 }}>
         <Button
-          title={sessionCompleted ? "Révision enregistrée !" : "Terminer et valider la révision"}
+          fullWidth
+          size="lg"
+          title={sessionCompleted ? "Révision enregistrée !" : "Valider la session"}
           onPress={() => void handleFinishAndSave()}
-          icon={CheckCircle2}
+          icon={CheckmarkCircle01Icon}
           disabled={sessionCompleted || action.busy}
         />
-      </Card>
+      </View>
 
       <ErrorText message={action.error} />
     </Screen>
@@ -429,8 +432,9 @@ const styles = StyleSheet.create({
   },
   timerCard: {
     alignItems: "center",
-    paddingVertical: 24,
-    gap: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    gap: 12,
   },
   timerHeader: {
     flexDirection: "row",
@@ -439,52 +443,53 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timerModeLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.2,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
   },
   modeToggle: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
   },
   timerDisplay: {
-    fontSize: 56,
-    fontWeight: "900",
+    fontSize: 44,
+    fontWeight: "700",
     letterSpacing: -1,
     fontVariant: ["tabular-nums"],
   },
   durationSelector: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
   durationButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   timerControls: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
     width: "100%",
     justifyContent: "center",
   },
   ratingGrid: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
     justifyContent: "space-between",
   },
   ratingBtn: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-    borderRadius: radius.button,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   ratingBtnText: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
+

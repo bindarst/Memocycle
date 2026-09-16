@@ -2,20 +2,30 @@ import React, { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet, Pressable, Modal } from "react-native";
 import {
-  Play,
-  GraduationCap,
-  ChevronDown,
-  ChevronUp,
-  Trash2,
-} from "lucide-react-native";
-import { courseInput, studyItemInput, type StudyItemType } from "@memocycle/contracts";
+  ArrowLeft01Icon,
+  PlayIcon,
+  PencilEdit01Icon,
+  Archive01Icon,
+  ArchiveRestoreIcon,
+  Delete02Icon,
+  Add01Icon,
+  Calendar01Icon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import {
+  courseInput,
+  studyItemInput,
+  STUDY_METHOD_LABELS,
+  type StudyItemType,
+} from "@memocycle/contracts";
 import {
   Screen,
-  Label,
   Card,
   Button,
+  IconButton,
   Field,
   Pill,
+  EmptyState,
   ErrorText,
   useAction,
   useEntities,
@@ -23,6 +33,7 @@ import {
   SectionTitle,
   usePalette,
 } from "../../src/ui/components";
+import { AppIcon } from "../../src/ui/Icon";
 import {
   courseSchema,
   planSchema,
@@ -57,21 +68,27 @@ export default function CourseDetail() {
   const events = useEntities("reviewEvent")
     .map((e) => eventSchema.parse(e))
     .filter((e) => e.courseId === id)
-    .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+    .sort((itemA, itemB) => itemB.completedAt.localeCompare(itemA.completedAt));
 
-  // Modal for adding StudyItem
   const [showItemModal, setShowItemModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const [itemType, setItemType] = useState<StudyItemType>("flashcard");
   const [frontText, setFrontText] = useState("");
   const [backText, setBackText] = useState("");
   const [hintText, setHintText] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   if (!raw) {
     return (
       <Screen>
-        <Label>Cours introuvable</Label>
-        <Button title="Retour" onPress={() => router.back()} />
+        <IconButton
+          icon={ArrowLeft01Icon}
+          accessibilityLabel="Retour"
+          onPress={() => router.back()}
+        />
+        <EmptyState
+          title="Cours introuvable"
+          description="Ce cours n'existe pas ou a été supprimé."
+        />
       </Screen>
     );
   }
@@ -116,180 +133,177 @@ export default function CourseDetail() {
 
   return (
     <Screen>
-      {/* Top bar & navigation */}
-      <Button secondary title="Retour" onPress={() => router.back()} />
-
-      <View style={{ gap: 4 }}>
-        <Label muted>
-          {String(subjects.find((s) => s.id === course.subjectId)?.title ?? "Sans matière")}
-          {course.moduleId
-            ? ` • ${modules.find((m) => m.id === course.moduleId)?.title ?? ""}`
-            : ""}
-        </Label>
-        <Label large>{course.title}</Label>
-        {course.description && (
-          <Text style={{ fontSize: 15, color: c.textSecondary, lineHeight: 22 }}>
-            {course.description}
+      {/* Top Header */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <IconButton
+          icon={ArrowLeft01Icon}
+          accessibilityLabel="Retour"
+          onPress={() => router.back()}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 13, color: c.textSecondary }} numberOfLines={1}>
+            {String(subjects.find((s) => s.id === course.subjectId)?.title ?? "Sans matière")}
+            {course.moduleId
+              ? ` • ${modules.find((m) => m.id === course.moduleId)?.title ?? ""}`
+              : ""}
           </Text>
-        )}
-      </View>
-
-      {/* Meta indicators: Importance, estimated time, items */}
-      <View style={styles.metaRow}>
-        <View style={[styles.metaChip, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
-          <Text style={[styles.metaLabel, { color: c.textSecondary }]}>Importance</Text>
-          <Text style={[styles.metaValue, { color: c.textPrimary }]}>
-            {"★".repeat(course.importance || 2)}
-          </Text>
-        </View>
-
-        <View style={[styles.metaChip, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
-          <Text style={[styles.metaLabel, { color: c.textSecondary }]}>Temps révision</Text>
-          <Text style={[styles.metaValue, { color: c.textPrimary }]}>
-            ~{course.estimatedReviewMinutes || 10} min
-          </Text>
-        </View>
-
-        <View style={[styles.metaChip, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
-          <Text style={[styles.metaLabel, { color: c.textSecondary }]}>Contenus</Text>
-          <Text style={[styles.metaValue, { color: c.textPrimary }]}>
-            {courseItems.length} fiche{courseItems.length > 1 ? "s" : ""}
+          <Text
+            style={{
+              fontSize: 18,
+              lineHeight: 22,
+              fontWeight: "700",
+              color: c.textPrimary,
+              letterSpacing: -0.3,
+            }}
+            numberOfLines={1}
+          >
+            {course.title}
           </Text>
         </View>
       </View>
 
-      {/* Memory Status & Next Review */}
-      <Card style={{ gap: 14 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+      {course.description ? (
+        <Text style={{ fontSize: 14, color: c.textSecondary, lineHeight: 20 }}>
+          {course.description}
+        </Text>
+      ) : null}
+
+      {/* Memory Status & Actions Card */}
+      <Card style={{ padding: 14, gap: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <View style={{ gap: 2 }}>
-            <Text style={{ fontSize: 12, fontWeight: "800", color: c.primary, textTransform: "uppercase", letterSpacing: 1.2 }}>
-              État de mémorisation
+            <Text style={{ fontSize: 13, color: c.textSecondary }}>
+              Prochaine révision :
             </Text>
-            <Text style={{ fontSize: 20, fontWeight: "800", color: c.textPrimary }}>
-              {retentionPercent !== null
-                ? `Mémoire estimée : ${retentionPercent} %`
-                : "Pas encore étudié"}
+            <Text style={{ fontSize: 15, fontWeight: "600", color: c.textPrimary }}>
+              {plan?.nextReviewAt
+                ? new Date(plan.nextReviewAt).getTime() < Date.now()
+                  ? `En retard (${lateness(plan.nextReviewAt)})`
+                  : displayDate(plan.nextReviewAt)
+                : plan?.status === "completed"
+                ? "Cycle terminé"
+                : "Non programmé"}
             </Text>
           </View>
           {retentionPercent !== null && (
             <Pill tone={retentionPercent >= 90 ? "success" : "warning"}>
-              {retentionPercent >= 90 ? "Solide" : "À réviser"}
+              {retentionPercent} %
             </Pill>
           )}
         </View>
 
-        <View style={{ gap: 4 }}>
-          <Text style={{ fontSize: 14, color: c.textSecondary }}>
-            Prochaine révision recommandée :
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
-            {plan?.nextReviewAt
-              ? new Date(plan.nextReviewAt).getTime() < Date.now()
-                ? `En retard (${lateness(plan.nextReviewAt)})`
-                : displayDate(plan.nextReviewAt)
-              : plan?.status === "completed"
-                ? "Cycle terminé"
-                : "Aucune révision programmée"}
-          </Text>
-        </View>
+        {/* Actions bar */}
+        <View style={{ gap: 8 }}>
+          {!course.archivedAt && (
+            <Button
+              fullWidth
+              size="md"
+              title={
+                !plan
+                  ? "J’ai étudié ce cours"
+                  : plan.status === "active"
+                  ? "Commencer la session"
+                  : "Recommencer un cycle"
+              }
+              icon={PlayIcon}
+              onPress={() => {
+                if (plan?.status === "active") {
+                  router.push(`/session/${id}`);
+                } else {
+                  void a.run(() =>
+                    completeReview(userId, id, plan ? "restart" : "start", newId()),
+                  );
+                }
+              }}
+            />
+          )}
 
-        {/* Action Button: Session */}
-        {!course.archivedAt && (
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
-            <View style={{ flex: 1 }}>
+          {plan?.status === "active" && (
+            <View style={{ flexDirection: "row", gap: 8 }}>
               <Button
-                title={!plan ? "J’ai étudié ce cours" : "Commencer une session"}
-                icon={Play}
-                onPress={() => {
-                  if (plan?.status === "active") {
-                    router.push(`/session/${id}`);
-                  } else {
-                    void a.run(() =>
-                      completeReview(userId, id, plan ? "restart" : "start", newId()),
-                    );
-                  }
-                }}
+                size="sm"
+                variant="secondary"
+                title="Planifier"
+                icon={Calendar01Icon}
+                onPress={() => setShowPlanModal(true)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                title="Réviser"
+                icon={SparklesIcon}
+                onPress={() => router.push(`/review/${id}?mode=voluntary`)}
+                style={{ flex: 1 }}
               />
             </View>
-            {plan?.status === "active" && (
-              <View style={{ flex: 1 }}>
-                <Button
-                  secondary
-                  title="Rappel actif direct"
-                  onPress={() => router.push(`/review/${id}`)}
-                />
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Advanced metrics accordion */}
-        {plan && (
-          <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: c.border, paddingTop: 10 }}>
-            <Pressable
-              onPress={() => setShowAdvanced(!showAdvanced)}
-              style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "700", color: c.textSecondary }}>
-                Paramètres avancés du moteur
-              </Text>
-              {showAdvanced ? (
-                <ChevronUp size={16} color={c.textSecondary} />
-              ) : (
-                <ChevronDown size={16} color={c.textSecondary} />
-              )}
-            </Pressable>
-
-            {showAdvanced && (
-              <View style={{ gap: 6, marginTop: 10 }}>
-                <Text style={{ fontSize: 13, color: c.textSecondary }}>
-                  Moteur : {plan.schedulerType === "fsrs" ? "FSRS adaptatif" : "Cycle classique (6 étapes)"}
-                </Text>
-                {plan.difficulty !== null && plan.difficulty !== undefined && (
-                  <Text style={{ fontSize: 13, color: c.textSecondary }}>
-                    Difficulté estimée : {plan.difficulty.toFixed(1)} / 10
-                  </Text>
-                )}
-                {plan.stability !== null && plan.stability !== undefined && (
-                  <Text style={{ fontSize: 13, color: c.textSecondary }}>
-                    Stabilité mémoire : {plan.stability.toFixed(1)} jours
-                  </Text>
-                )}
-                <Text style={{ fontSize: 13, color: c.textSecondary }}>
-                  Répétitions réussies : {plan.reps ?? plan.currentStep} • Oublis : {plan.lapses ?? 0}
-                </Text>
-                {plan.lastRating && (
-                  <Text style={{ fontSize: 13, color: c.textSecondary }}>
-                    Dernière auto-évaluation : {plan.lastRating}
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
-        )}
+          )}
+        </View>
       </Card>
 
-      {/* Memory Curve for this course */}
+      {/* Méthodes utilisées */}
+      {events.length > 0 && (
+        <Card style={{ padding: 14, gap: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: c.textPrimary }}>
+            Méthodes utilisées
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+            {(() => {
+              const methodCounts: Record<string, number> = {};
+              for (const ev of events) {
+                const m = ev.studyMethod || (ev.confidence ? "cued_recall" : "free_recall");
+                const label = STUDY_METHOD_LABELS[m as keyof typeof STUDY_METHOD_LABELS] || m;
+                methodCounts[label] = (methodCounts[label] || 0) + 1;
+              }
+              return Object.entries(methodCounts).map(([label, count]) => (
+                <Pill key={label} tone="neutral">
+                  {label} · {count}
+                </Pill>
+              ));
+            })()}
+          </View>
+        </Card>
+      )}
+
+      {/* Memory Curve */}
       {plan && <MemoryCurve plans={[plan]} now={Date.now()} />}
 
-      {/* Learning Units (StudyItems) */}
-      <View style={{ gap: 12 }}>
+      {/* Learning Items */}
+      <View style={{ gap: 8 }}>
         <SectionTitle
-          eyebrow="Contenus d'apprentissage"
-          title={`Fiches & questions (${courseItems.length})`}
+          title={`Fiches (${courseItems.length})`}
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={Add01Icon}
+              title="Fiche"
+              onPress={() => handleOpenAddItem("flashcard")}
+            />
+          }
         />
 
         {courseItems.map((item) => (
-          <Card key={item.id} style={{ gap: 8 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Card key={item.id} style={{ padding: 12, gap: 6 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Pill tone="primary">
                 {item.type === "flashcard"
                   ? "Flashcard"
                   : item.type === "question"
-                    ? "Question"
-                    : item.type === "cloze"
-                      ? "Texte à trous"
-                      : "Note"}
+                  ? "Question"
+                  : "Note"}
               </Pill>
               <Pressable
                 onPress={() =>
@@ -299,79 +313,130 @@ export default function CourseDetail() {
                     () => void a.run(() => remove("studyItem", item.id, userId)),
                   )
                 }
+                style={{ padding: 4 }}
               >
-                <Trash2 size={16} color={c.danger} />
+                <AppIcon icon={Delete02Icon} size={16} color={c.danger} />
               </Pressable>
             </View>
 
-            <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: c.textPrimary }}>
               {item.front || item.back || "Contenu"}
             </Text>
             {item.back && item.type !== "note" && (
-              <Text style={{ fontSize: 14, color: c.textSecondary }}>
-                Réponse : {item.back}
+              <Text style={{ fontSize: 13, color: c.textSecondary }}>
+                {item.back}
               </Text>
             )}
             {item.hint && (
-              <Text style={{ fontSize: 13, color: c.warning, fontStyle: "italic" }}>
+              <Text style={{ fontSize: 12, color: c.warning, fontStyle: "italic" }}>
                 Indice : {item.hint}
               </Text>
             )}
           </Card>
         ))}
-
-        {/* Action Buttons to Add Items */}
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Button
-              secondary
-              title="+ Fiche"
-              onPress={() => handleOpenAddItem("flashcard")}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              secondary
-              title="+ Question"
-              onPress={() => handleOpenAddItem("question")}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              secondary
-              title="+ Note"
-              onPress={() => handleOpenAddItem("note")}
-            />
-          </View>
-        </View>
       </View>
 
       {/* Associated Exams */}
       {associatedExams.length > 0 && (
-        <View style={{ gap: 10 }}>
-          <SectionTitle eyebrow="Examens" title="Échéances associées" />
+        <View style={{ gap: 6 }}>
+          <SectionTitle title="Examens associés" />
           {associatedExams.map((exam) => (
-            <Card key={exam.id} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <GraduationCap size={24} color={c.warning} />
-              <View style={{ flex: 1, gap: 2 }}>
-                <Label style={{ fontWeight: "700" }}>{exam.title}</Label>
-                <Label muted style={{ fontSize: 13 }}>{displayDate(exam.examAt)}</Label>
-              </View>
+            <Card
+              key={exam.id}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: 12,
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "600", color: c.textPrimary }}>
+                {exam.title}
+              </Text>
+              <Text style={{ fontSize: 12, color: c.textSecondary }}>
+                {displayDate(exam.examAt)}
+              </Text>
             </Card>
           ))}
         </View>
       )}
 
-      {/* Course management buttons */}
-      <View style={{ gap: 10, marginTop: 10 }}>
+      {/* History section: compact list with dividers */}
+      {events.length > 0 && (
+        <View style={{ gap: 6 }}>
+          <SectionTitle title="Historique" />
+          <Card style={{ padding: 12, gap: 8 }}>
+            {events.map((e, idx) => (
+              <View
+                key={e.id}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingVertical: 6,
+                  borderTopWidth: idx > 0 ? 1 : 0,
+                  borderTopColor: c.border,
+                }}
+              >
+                <View style={{ gap: 1 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: c.textPrimary }}>
+                    {e.kind === "review_completed"
+                      ? "Révision effectuée"
+                      : e.kind === "initial_study"
+                      ? "Étude initiale"
+                      : "Cycle redémarré"}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: c.textSecondary }}>
+                    {displayDate(e.completedAt)}
+                  </Text>
+                </View>
+                {e.confidence && (
+                  <Pill
+                    tone={
+                      e.confidence === "easy" || e.confidence === "good"
+                        ? "success"
+                        : "warning"
+                    }
+                  >
+                    {e.confidence === "again"
+                      ? "Oublié"
+                      : e.confidence === "hard"
+                      ? "Difficile"
+                      : e.confidence === "good"
+                      ? "Bien"
+                      : "Facile"}
+                  </Pill>
+                )}
+              </View>
+            ))}
+          </Card>
+        </View>
+      )}
+
+      {/* Course management: compact actions at bottom */}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 8,
+          marginTop: 12,
+          paddingTop: 8,
+          borderTopWidth: 1,
+          borderTopColor: c.border,
+        }}
+      >
         <Button
-          secondary
-          title="Modifier le cours"
+          size="sm"
+          variant="secondary"
+          icon={PencilEdit01Icon}
+          title="Modifier"
           onPress={() => router.push(`/course/edit/${id}`)}
         />
         <Button
-          secondary
-          title={course.archivedAt ? "Désarchiver" : "Archiver le cours"}
+          size="sm"
+          variant="secondary"
+          icon={course.archivedAt ? ArchiveRestoreIcon : Archive01Icon}
+          title={course.archivedAt ? "Désarchiver" : "Archiver"}
           onPress={() =>
             void a.run(async () => {
               const input = courseInput.parse(
@@ -395,8 +460,10 @@ export default function CourseDetail() {
           }
         />
         <Button
-          danger
-          title="Supprimer ce cours"
+          size="sm"
+          variant="destructive"
+          icon={Delete02Icon}
+          title="Supprimer"
           onPress={() =>
             confirm(
               "Supprimer ce cours ?",
@@ -411,48 +478,6 @@ export default function CourseDetail() {
         />
       </View>
 
-      {/* History section */}
-      <SectionTitle eyebrow="Historique" title="Sessions et révisions passées" />
-      {events.length > 0 ? (
-        events.map((e) => (
-          <Card key={e.id}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Label style={{ fontWeight: "700" }}>
-                {e.kind === "review_completed"
-                  ? `Révision terminée`
-                  : e.kind === "initial_study"
-                    ? "Étude initiale"
-                    : "Cycle redémarré"}
-              </Label>
-              {e.confidence && (
-                <Pill
-                  tone={
-                    e.confidence === "easy" || e.confidence === "good"
-                      ? "success"
-                      : "warning"
-                  }
-                >
-                  {e.confidence === "again"
-                    ? "Oublié"
-                    : e.confidence === "hard"
-                      ? "Difficile"
-                      : e.confidence === "good"
-                        ? "Bien"
-                        : "Facile"}
-                </Pill>
-              )}
-            </View>
-            <Label muted style={{ fontSize: 13 }}>
-              {displayDate(e.completedAt)}
-            </Label>
-          </Card>
-        ))
-      ) : (
-        <Card>
-          <Label muted>Aucune révision enregistrée pour l'instant.</Label>
-        </Card>
-      )}
-
       {/* Modal for adding StudyItem */}
       <Modal
         visible={showItemModal}
@@ -461,36 +486,36 @@ export default function CourseDetail() {
         onRequestClose={() => setShowItemModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: c.surface, borderColor: c.border },
+            ]}
+          >
             <SectionTitle
-              eyebrow="Nouvel élément"
               title={
                 itemType === "flashcard"
-                  ? "Créer une flashcard"
+                  ? "Nouvelle flashcard"
                   : itemType === "question"
-                    ? "Créer une question"
-                    : "Ajouter une note"
+                  ? "Nouvelle question"
+                  : "Nouvelle note"
               }
             />
 
             <Field
-              label={itemType === "question" ? "Question" : "Face avant (Recto)"}
+              label={itemType === "question" ? "Question" : "Recto"}
               value={frontText}
               onChangeText={setFrontText}
-              placeholder={
-                itemType === "question"
-                  ? "Quelle est la formule de..."
-                  : "Mot-clé, concept ou énoncé"
-              }
+              placeholder="Question ou concept"
               multiline
             />
 
             {itemType !== "note" && (
               <Field
-                label="Face arrière (Réponse)"
+                label="Verso (Réponse)"
                 value={backText}
                 onChangeText={setBackText}
-                placeholder="Réponse ou définition attendue"
+                placeholder="Réponse attendue"
                 multiline
               />
             )}
@@ -499,23 +524,125 @@ export default function CourseDetail() {
               label="Indice (optionnel)"
               value={hintText}
               onChangeText={setHintText}
-              placeholder="Indice d'activation mnémotechnique"
+              placeholder="Indice"
             />
 
-            <View style={{ gap: 8, marginTop: 8 }}>
+            <View style={{ gap: 8, marginTop: 4 }}>
               <Button
-                title="Enregistrer la fiche"
+                fullWidth
+                size="md"
+                title="Enregistrer"
                 onPress={() => void handleSaveItem()}
                 disabled={a.busy}
               />
               <Button
-                secondary
+                variant="ghost"
                 title="Annuler"
                 onPress={() => setShowItemModal(false)}
+                style={{ alignSelf: "center" }}
               />
             </View>
 
             <ErrorText message={a.error} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal for Quick Planning */}
+      <Modal
+        visible={showPlanModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPlanModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: c.surface, borderColor: c.border },
+            ]}
+          >
+            <SectionTitle title="Planifier la prochaine révision" />
+            <Text style={{ fontSize: 13, color: c.textSecondary }}>
+              Choisir un créneau pour ce cours :
+            </Text>
+
+            <View style={{ gap: 8, marginTop: 6 }}>
+              <Button
+                fullWidth
+                size="md"
+                variant="secondary"
+                title="Aujourd’hui (18:00)"
+                onPress={() => {
+                  if (plan) {
+                    const d = new Date();
+                    d.setHours(18, 0, 0, 0);
+                    void a.run(async () => {
+                      await save("reviewPlan", userId, { ...plan, nextReviewAt: d.toISOString() }, plan.id);
+                      setShowPlanModal(false);
+                    });
+                  }
+                }}
+              />
+              <Button
+                fullWidth
+                size="md"
+                variant="secondary"
+                title="Demain (18:00)"
+                onPress={() => {
+                  if (plan) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 1);
+                    d.setHours(18, 0, 0, 0);
+                    void a.run(async () => {
+                      await save("reviewPlan", userId, { ...plan, nextReviewAt: d.toISOString() }, plan.id);
+                      setShowPlanModal(false);
+                    });
+                  }
+                }}
+              />
+              <Button
+                fullWidth
+                size="md"
+                variant="secondary"
+                title="Dans 3 jours"
+                onPress={() => {
+                  if (plan) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 3);
+                    d.setHours(18, 0, 0, 0);
+                    void a.run(async () => {
+                      await save("reviewPlan", userId, { ...plan, nextReviewAt: d.toISOString() }, plan.id);
+                      setShowPlanModal(false);
+                    });
+                  }
+                }}
+              />
+              <Button
+                fullWidth
+                size="md"
+                variant="secondary"
+                title="Dans 1 semaine"
+                onPress={() => {
+                  if (plan) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 7);
+                    d.setHours(18, 0, 0, 0);
+                    void a.run(async () => {
+                      await save("reviewPlan", userId, { ...plan, nextReviewAt: d.toISOString() }, plan.id);
+                      setShowPlanModal(false);
+                    });
+                  }
+                }}
+              />
+            </View>
+
+            <Button
+              variant="ghost"
+              title="Fermer"
+              onPress={() => setShowPlanModal(false)}
+              style={{ alignSelf: "center", marginTop: 6 }}
+            />
           </View>
         </View>
       </Modal>
@@ -526,28 +653,6 @@ export default function CourseDetail() {
 }
 
 const styles = StyleSheet.create({
-  metaRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  metaChip: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    alignItems: "center",
-    gap: 3,
-  },
-  metaLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  metaValue: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -557,8 +662,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderRadius: radius.card,
     borderWidth: 1,
-    padding: 22,
-    gap: 14,
+    padding: 18,
+    gap: 12,
     maxHeight: "90%",
   },
 });

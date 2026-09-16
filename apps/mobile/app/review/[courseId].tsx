@@ -1,18 +1,21 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import {
-  CheckCircle2,
-  HelpCircle,
-  Sparkles,
-  Eye,
-  Layers,
-} from "lucide-react-native";
+  ArrowLeft01Icon,
+  CheckmarkCircle01Icon,
+  HelpCircleIcon,
+  ViewIcon,
+  Layers01Icon,
+  Cancel01Icon,
+} from "@hugeicons/core-free-icons";
 import {
   Screen,
   Label,
   Button,
+  IconButton,
   Card,
+  EmptyState,
   ErrorText,
   useAction,
   useEntities,
@@ -20,6 +23,7 @@ import {
   Pill,
   confirm,
 } from "../../src/ui/components";
+import { AppIcon } from "../../src/ui/Icon";
 import {
   courseSchema,
   planSchema,
@@ -29,7 +33,12 @@ import {
 import { useAuth } from "../../src/auth/AuthProvider";
 import { completeReview } from "../../src/review/reviewService";
 import { newId } from "../../src/utils/ids";
-import type { ReviewRating } from "@memocycle/contracts";
+import {
+  STUDY_METHOD_LABELS,
+  type ReviewRating,
+  type StudyMethod,
+} from "@memocycle/contracts";
+import { recommendStudyMethod } from "../../src/review/methodRecommendationService";
 
 export function calculateSessionRating(ratings: ReviewRating[]): ReviewRating {
   if (!ratings.length) return "good";
@@ -38,24 +47,20 @@ export function calculateSessionRating(ratings: ReviewRating[]): ReviewRating {
   const hardCount = ratings.filter((r) => r === "hard").length;
   const easyCount = ratings.filter((r) => r === "easy").length;
 
-  // Règle conservatrice imposée :
-  // 1. Si au moins 25% des éléments sont "again" -> "again"
   if (againCount / total >= 0.25) return "again";
-  // 2. Sinon si la majorité est "hard" -> "hard"
   if (hardCount / total >= 0.5) return "hard";
-  // 3. Sinon si au moins 70% sont "easy" -> "easy"
   if (easyCount / total >= 0.7) return "easy";
-  // 4. Sinon -> "good"
   return "good";
 }
 
 export default function Review() {
-  const { courseId } = useLocalSearchParams<{ courseId: string }>();
+  const { courseId, mode } = useLocalSearchParams<{ courseId: string; mode?: string }>();
   const { userId } = useAuth();
   const c = usePalette();
   const a = useAction();
   const mutation = useRef(newId());
   const locked = useRef(false);
+  const startTimeRef = useRef(Date.now());
 
   const rawCourse = useEntities("course").find((item) => item.id === courseId);
   const rawPlan = useEntities("reviewPlan").find((p) => p.courseId === courseId);
@@ -77,8 +82,15 @@ export default function Review() {
   if (!rawCourse || !rawPlan) {
     return (
       <Screen>
-        <Label>Ce cours n’a pas de révision active.</Label>
-        <Button title="Retour" onPress={() => router.back()} />
+        <IconButton
+          icon={ArrowLeft01Icon}
+          accessibilityLabel="Retour"
+          onPress={() => router.back()}
+        />
+        <EmptyState
+          title="Révision introuvable"
+          description="Ce cours n’a pas de révision active ou est introuvable."
+        />
       </Screen>
     );
   }
@@ -87,6 +99,9 @@ export default function Review() {
   const plan = planSchema.parse(rawPlan);
   const subject = subjects.find((s) => s.id === course.subjectId);
   const moduleItem = modules.find((m) => m.id === course.moduleId);
+
+  const recommendation = recommendStudyMethod(course, plan);
+  const [selectedMethod, setSelectedMethod] = useState<StudyMethod>(recommendation.method);
 
   const currentItem: StudyItem | undefined = allItems[currentIndex];
   const totalItems = allItems.length;
@@ -114,6 +129,7 @@ export default function Review() {
     if (locked.current) return;
     locked.current = true;
     const finalRating = ratingToSubmit ?? globalRating;
+    const durationSeconds = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
     void a.run(async () => {
       try {
         await completeReview(
@@ -121,8 +137,13 @@ export default function Review() {
           courseId,
           "complete",
           mutation.current,
-          finalRating,
-          plan.desiredRetention,
+          {
+            rating: finalRating,
+            desiredRetention: plan.desiredRetention,
+            durationSeconds,
+            sessionType: mode === "voluntary" ? "voluntary_review" : "scheduled_review",
+            studyMethod: selectedMethod,
+          },
         );
         setDone(true);
       } catch (e) {
@@ -192,41 +213,63 @@ export default function Review() {
   return (
     <Screen>
       <View style={styles.headerRow}>
-        <Button secondary title="Fermer" onPress={() => router.back()} />
+        <IconButton
+          icon={Cancel01Icon}
+          accessibilityLabel="Fermer"
+          onPress={() => router.back()}
+        />
         <Pill tone="primary">
-          {plan.schedulerType === "fsrs" ? "Moteur adaptatif FSRS" : `Étape ${plan.currentStep}/6`}
+          {plan.schedulerType === "fsrs" ? "FSRS" : `${plan.currentStep}/6`}
         </Pill>
       </View>
 
-      <View style={{ gap: 4 }}>
-        <Label muted>
+      <View style={{ gap: 2 }}>
+        <Text style={{ fontSize: 13, color: c.textSecondary }}>
           {String(subject?.title ?? "")}
           {moduleItem ? ` · ${moduleItem.title}` : ""}
-        </Label>
+        </Text>
         <Label large>{course.title}</Label>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
+          <Text style={{ fontSize: 12, fontWeight: "600", color: c.textSecondary }}>
+            Méthode :
+          </Text>
+          <Pressable
+            onPress={() => {
+              const allMethods: StudyMethod[] = [
+                "free_recall",
+                "cued_recall",
+                "practice_problems",
+                "active_reading",
+                "self_explanation",
+                "worked_example",
+                "passive_reading",
+              ];
+              const nextIdx = (allMethods.indexOf(selectedMethod) + 1) % allMethods.length;
+              setSelectedMethod(allMethods[nextIdx]!);
+            }}
+          >
+            <Pill tone="primary">
+              {`${STUDY_METHOD_LABELS[selectedMethod]}${selectedMethod === recommendation.method ? " · Recommandé" : ""}`}
+            </Pill>
+          </Pressable>
+        </View>
       </View>
 
       {done ? (
         <Card style={styles.resultCard}>
           <View style={[styles.resultIcon, { backgroundColor: c.successSoft }]}>
-            <CheckCircle2 color={c.success} size={36} />
+            <AppIcon icon={CheckmarkCircle01Icon} color={c.success} size={32} />
           </View>
           <Label large style={{ textAlign: "center" }}>
-            ✓ Révision enregistrée
+            Révision enregistrée
           </Label>
-          <Label muted style={{ textAlign: "center" }}>
-            Ton état de mémoire et la prochaine date de rappel ont été ajustés automatiquement.
-          </Label>
-          <Button title="Terminer" onPress={() => router.back()} />
+          <Button fullWidth size="lg" title="Terminer" onPress={() => router.back()} />
         </Card>
       ) : sessionCompleted ? (
-        <Card style={{ gap: 16 }}>
-          <View style={styles.summaryHeader}>
-            <Sparkles color={c.primary} size={24} />
-            <Text style={[styles.summaryTitle, { color: c.textPrimary }]}>
-              Résumé de la session
-            </Text>
-          </View>
+        <Card style={{ gap: 14 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+            Résumé de la session
+          </Text>
 
           {totalItems > 0 && (
             <View style={styles.breakdownRow}>
@@ -234,46 +277,33 @@ export default function Review() {
                 <Text style={[styles.breakdownVal, { color: c.danger }]}>
                   {Object.values(itemRatings).filter((r) => r === "again").length}
                 </Text>
-                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Oubliés</Text>
+                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Oublié</Text>
               </View>
               <View style={styles.breakdownItem}>
                 <Text style={[styles.breakdownVal, { color: c.warning }]}>
                   {Object.values(itemRatings).filter((r) => r === "hard").length}
                 </Text>
-                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Difficiles</Text>
+                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Difficile</Text>
               </View>
               <View style={styles.breakdownItem}>
                 <Text style={[styles.breakdownVal, { color: c.primary }]}>
                   {Object.values(itemRatings).filter((r) => r === "good").length}
                 </Text>
-                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Biens</Text>
+                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Bien</Text>
               </View>
               <View style={styles.breakdownItem}>
                 <Text style={[styles.breakdownVal, { color: c.success }]}>
                   {Object.values(itemRatings).filter((r) => r === "easy").length}
                 </Text>
-                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Faciles</Text>
+                <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Facile</Text>
               </View>
             </View>
           )}
 
-          <View style={[styles.assessmentBanner, { backgroundColor: c.surfaceMuted }]}>
-            <Text style={[styles.assessmentKicker, { color: c.textSecondary }]}>
-              Évaluation globale calculée :
-            </Text>
-            <Text style={[styles.assessmentValue, { color: c.primary }]}>
-              {globalRating === "again"
-                ? "Oublié (répétition rapprochée)"
-                : globalRating === "hard"
-                  ? "Difficile (renforcement)"
-                  : globalRating === "easy"
-                    ? "Facile (intervalle allongé)"
-                    : "Bien (progression standard)"}
-            </Text>
-          </View>
-
           <Button
-            title="Valider et enregistrer"
+            fullWidth
+            size="lg"
+            title="Valider"
             disabled={a.busy}
             onPress={() => {
               if (
@@ -282,7 +312,7 @@ export default function Review() {
               ) {
                 confirm(
                   "Valider en avance ?",
-                  "Cette révision était prévue plus tard. L'algorithme FSRS adaptera le prochain intervalle.",
+                  "Cette révision était prévue plus tard.",
                   () => handleCommitReview(globalRating),
                 );
               } else {
@@ -292,37 +322,37 @@ export default function Review() {
           />
         </Card>
       ) : totalItems > 0 && currentItem ? (
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 12 }}>
           {/* Progression */}
           <View style={styles.progressHeader}>
             <Text style={[styles.progressCount, { color: c.textSecondary }]}>
-              Fiche {currentIndex + 1} sur {totalItems}
+              {currentIndex + 1} / {totalItems}
             </Text>
             <Pill tone="primary">{currentItem.type}</Pill>
           </View>
           <View style={[styles.progressBar, { backgroundColor: c.border }]}>
             <View
               style={{
-                height: 6,
-                borderRadius: 6,
+                height: 4,
+                borderRadius: 4,
                 backgroundColor: c.primary,
                 width: `${((currentIndex + 1) / totalItems) * 100}%`,
               }}
             />
           </View>
 
-          {/* Carte recto / verso */}
+          {/* Flashcard */}
           <Card style={styles.flashcard}>
             <View style={styles.cardHeader}>
-              <Layers color={c.primary} size={18} />
+              <AppIcon icon={Layers01Icon} color={c.primary} size={16} />
               <Text style={[styles.cardTypeLabel, { color: c.primary }]}>
                 {currentItem.type === "question"
                   ? "QUESTION"
                   : currentItem.type === "cloze"
-                    ? "TEXTE À TROUS"
-                    : currentItem.type === "note"
-                      ? "NOTE DE SYNTHÈSE"
-                      : "RECTO"}
+                  ? "TEXTE À TROUS"
+                  : currentItem.type === "note"
+                  ? "NOTE"
+                  : "RECTO"}
               </Text>
             </View>
 
@@ -332,32 +362,36 @@ export default function Review() {
 
             {currentItem.hint && !showHint && (
               <Button
-                secondary
-                icon={HelpCircle}
-                title="Afficher l'indice"
+                size="sm"
+                variant="ghost"
+                icon={HelpCircleIcon}
+                title="Indice"
                 onPress={() => setShowHint(true)}
               />
             )}
 
             {showHint && currentItem.hint && (
               <View style={[styles.hintBox, { backgroundColor: c.warningSoft }]}>
-                <Text style={[styles.hintLabel, { color: c.warning }]}>Indice :</Text>
                 <Text style={[styles.hintText, { color: c.textPrimary }]}>
                   {currentItem.hint}
                 </Text>
               </View>
             )}
 
-            {/* Réponse */}
+            {/* Answer */}
             {!showAnswer ? (
               <Button
-                icon={Eye}
+                fullWidth
+                size="md"
+                icon={ViewIcon}
                 title="Afficher la réponse"
                 onPress={() => setShowAnswer(true)}
               />
             ) : (
               <View style={[styles.answerContainer, { borderTopColor: c.border }]}>
-                <Text style={[styles.answerHeader, { color: c.success }]}>RÉPONSE / VERSO</Text>
+                <Text style={[styles.answerHeader, { color: c.success }]}>
+                  RÉPONSE
+                </Text>
                 <Text style={[styles.answerText, { color: c.textPrimary }]}>
                   {currentItem.back || currentItem.front}
                 </Text>
@@ -365,25 +399,17 @@ export default function Review() {
             )}
           </Card>
 
-          {/* Auto-évaluation une fois la réponse affichée */}
+          {/* Evaluation */}
           {showAnswer && (
-            <View style={{ gap: 8 }}>
-              <Label muted style={{ fontSize: 13, textAlign: "center" }}>
-                Comment évalues-tu ton rappel actif ?
-              </Label>
+            <View style={{ gap: 6, marginTop: 4 }}>
               {renderRatingButtons(handleRateItem, a.busy)}
             </View>
           )}
         </View>
       ) : (
-        /* Cas où le cours n'a pas encore de StudyItem détaillés */
-        <Card style={{ gap: 14 }}>
-          <Label large>Auto-évaluation globale</Label>
-          <Label muted>
-            Ce cours ne comporte pas encore de fiches individuelles. Évalue globalement ta maîtrise du
-            cours pour ajuster ton calendrier adaptatif.
-          </Label>
-
+        /* Cas sans items */
+        <Card style={{ gap: 12 }}>
+          <Label large>Auto-évaluation</Label>
           {renderRatingButtons((rating) => {
             setGlobalRating(rating);
             if (
@@ -392,7 +418,7 @@ export default function Review() {
             ) {
               confirm(
                 "Valider en avance ?",
-                "Cette révision était prévue plus tard. L'algorithme FSRS adaptera le prochain intervalle.",
+                "Cette révision était prévue plus tard.",
                 () => handleCommitReview(rating),
               );
             } else {
@@ -408,41 +434,53 @@ export default function Review() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  progressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  progressCount: { fontSize: 13, fontWeight: "700" },
-  progressBar: { height: 6, borderRadius: 6, overflow: "hidden" },
-  flashcard: { minHeight: 220, gap: 16, padding: 22 },
-  cardHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  cardTypeLabel: { fontSize: 11, fontWeight: "900", letterSpacing: 1.2 },
-  cardFrontText: { fontSize: 20, lineHeight: 28, fontWeight: "700" },
-  hintBox: { padding: 12, borderRadius: 12, gap: 4 },
-  hintLabel: { fontSize: 11, fontWeight: "800", textTransform: "uppercase" },
-  hintText: { fontSize: 14, lineHeight: 20 },
-  answerContainer: { paddingTop: 16, borderTopWidth: 1, gap: 8 },
-  answerHeader: { fontSize: 11, fontWeight: "900", letterSpacing: 1.2 },
-  answerText: { fontSize: 18, lineHeight: 26, fontWeight: "600" },
-  ratingGrid: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  progressCount: { fontSize: 13, fontWeight: "600" },
+  progressBar: { height: 4, borderRadius: 4, overflow: "hidden" },
+  flashcard: { minHeight: 180, gap: 12, padding: 16 },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
+  cardTypeLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
+  cardFrontText: { fontSize: 17, lineHeight: 22, fontWeight: "600" },
+  hintBox: { padding: 10, borderRadius: 8 },
+  hintText: { fontSize: 13, lineHeight: 18 },
+  answerContainer: { paddingTop: 12, borderTopWidth: 1, gap: 6 },
+  answerHeader: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
+  answerText: { fontSize: 15, lineHeight: 20, fontWeight: "600" },
+  ratingGrid: { flexDirection: "row", gap: 6 },
   ratingButton: {
     flex: 1,
-    minWidth: "45%",
-    minHeight: 52,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    minHeight: 40,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
-  ratingLabel: { fontSize: 15, fontWeight: "800" },
-  resultCard: { alignItems: "center", padding: 28, gap: 16 },
-  resultIcon: { width: 68, height: 68, borderRadius: 34, alignItems: "center", justifyContent: "center" },
-  summaryHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  summaryTitle: { fontSize: 18, fontWeight: "800" },
-  breakdownRow: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 8 },
+  ratingLabel: { fontSize: 13, fontWeight: "600" },
+  resultCard: { alignItems: "center", padding: 24, gap: 12 },
+  resultIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  breakdownRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 6,
+  },
   breakdownItem: { alignItems: "center", gap: 2 },
-  breakdownVal: { fontSize: 24, fontWeight: "900" },
-  breakdownLabel: { fontSize: 11, fontWeight: "700" },
-  assessmentBanner: { padding: 14, borderRadius: 14, gap: 4 },
-  assessmentKicker: { fontSize: 12, fontWeight: "700" },
-  assessmentValue: { fontSize: 16, fontWeight: "800" },
+  breakdownVal: { fontSize: 18, fontWeight: "700" },
+  breakdownLabel: { fontSize: 11, fontWeight: "500" },
 });
+

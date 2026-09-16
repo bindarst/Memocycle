@@ -5,18 +5,23 @@ import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "../src/auth/AuthProvider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { find } from "../src/database/repository";
+
 void SplashScreen.preventAutoHideAsync();
+
 function Gate() {
   const { state, onboarded, userId } = useAuth();
   const [pending, setPending] = useState<{
     courseId: string;
     owner: string;
   } | null>(null);
+
   const authenticated =
     state === "authenticated" || state === "offline_authenticated";
+
   useEffect(() => {
     if (state !== "booting") void SplashScreen.hideAsync();
   }, [state]);
+
   useEffect(() => {
     const receive = (r: Notifications.NotificationResponse) => {
       const d = r.notification.request.content.data ?? {};
@@ -33,6 +38,7 @@ function Gate() {
     });
     return () => sub.remove();
   }, []);
+
   useEffect(() => {
     if (authenticated && onboarded && pending) {
       setPending(null);
@@ -42,7 +48,9 @@ function Gate() {
         });
     }
   }, [authenticated, onboarded, pending, userId]);
+
   if (state === "booting") return null;
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!authenticated}>
@@ -60,11 +68,11 @@ function Gate() {
         <Stack.Screen name="session" />
         <Stack.Screen name="stats" />
         <Stack.Screen name="settings" />
-        <Stack.Screen name="paywall" />
       </Stack.Protected>
     </Stack>
   );
 }
+
 export default function Layout() {
   return (
     <SafeAreaProvider>
