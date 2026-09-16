@@ -40,6 +40,12 @@ node --env-file=.env node_modules/prisma/build/index.js migrate deploy --schema 
 
 ## Mobile
 
+La bêta Android autonome est disponible en
+[téléchargement direct](https://github.com/bindarst/Memocycle/releases/download/v1.0.0-beta.1/memocycle-android-v1.0.0-beta.1.apk)
+et sur la [page de la release](https://github.com/bindarst/Memocycle/releases/tag/v1.0.0-beta.1).
+Elle s'installe directement sur Android, sans Expo et sans connexion USB. Les
+APK restent hors de Git et sont joints aux releases.
+
 ```sh
 cd apps/mobile
 npx expo run:android
@@ -89,9 +95,10 @@ fichiers `.env` restent hors Git.
 ## État de livraison
 
 Le parcours métier et ses transactions sont implémentés et testés. L'API et sa
-base PostgreSQL isolée sont actives sur OVH. La publication commerciale reste
-conditionnée à la finalisation OAuth, aux validations natives et aux documents
-de l'éditeur. Les limites précises sont consignées dans
+base PostgreSQL isolée sont actives sur OVH. Les clients OAuth Android et Web
+sont créés, l'API est configurée et l'APK de production est signé. La
+publication OAuth générale reste conditionnée aux mentions légales validées et
+aux derniers essais sur appareil. Les limites précises sont consignées dans
 [docs/RELEASE.md](docs/RELEASE.md), et les choix de synchronisation dans
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 

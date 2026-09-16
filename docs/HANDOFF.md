@@ -1,6 +1,6 @@
 # Reprise du projet MémoCycle
 
-Dernière mise à jour : 15 septembre 2026.
+Dernière mise à jour : 16 septembre 2026.
 
 Ce document est la source de vérité pour reprendre le projet. Ne jamais ajouter
 de mot de passe, de secret JWT, de fichier `.env`, de clé privée ou de keystore
@@ -43,22 +43,23 @@ La base GMAO Equaz n'a pas été utilisée ni modifiée. Les fichiers utiles son
   externe et contact du propriétaire.
 - Aucun Firebase Identity Platform ni service d'authentification payant n'est
   nécessaire pour cette intégration.
-- Le formulaire du client Android est préparé dans Google Cloud mais son bouton
-  `Créer` n'a pas encore été validé.
-- Client Android à créer : nom `MémoCycle Android production`, package
+- Client Android créé : nom `MémoCycle Android production`, package
   `app.memocycle.mobile`, SHA-1
   `2E:58:2C:B8:35:27:1E:CA:47:91:05:7F:AE:AA:D2:71:11:0C:DC:25`.
-- Créer ensuite un client OAuth de type Application Web nommé
-  `MémoCycle API`. Les origines et URI de redirection peuvent rester vides pour
-  le flux natif actuel.
-- Copier les deux Client IDs publics. Ne pas créer ni conserver de secret OAuth
-  dans l'application mobile.
+- Client Web créé : `MémoCycle API`. Les origines et URI de redirection sont
+  vides pour le flux natif actuel.
+- Client ID Android :
+  `575543516415-qjfv5cn3hfsjg241n63edgtp1rhjqmar.apps.googleusercontent.com`.
+- Client ID Web :
+  `575543516415-aaie2tg4vtqbshlf4r8k5vc98ngb181d.apps.googleusercontent.com`.
+- Ces deux Client IDs publics sont actifs dans le `.env` OVH et dans le build
+  mobile. Le secret du client Web n'est pas utilisé par l'application.
+- OAuth reste en mode `Test`. Le passage en production exige une page d'accueil,
+  une politique de confidentialité et des conditions validées. Ne pas publier
+  les textes provisoires présents dans `infra/public` comme documents juridiques.
 
-Après leur création, renseigner sur OVH `GOOGLE_ANDROID_CLIENT_ID` et
-`GOOGLE_WEB_CLIENT_ID` dans le `.env` serveur, puis recréer seulement le
-conteneur `memocycle-api`. Fournir les mêmes valeurs au build mobile avec
-`EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` et
-`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+Le script `infra/configure-google-ovh.sh` permet de remettre ces valeurs sur le
+serveur et de recréer uniquement `memocycle-api`.
 
 ## Signature Android
 
@@ -74,29 +75,33 @@ coffre privé : perdre cette clé empêcherait de publier une mise à jour porta
 la même signature. Le plugin `apps/mobile/plugins/with-release-signing.js`
 réapplique la signature après un `expo prebuild`.
 
-## APK et rebuild restant
+## APK Android actuel
 
-L'APK actuellement installé est autonome, mais il a été signé avec la clé de
-test Android et embarque l'ancienne URL `https://api.memocycle.app`. Il doit donc
-être remplacé. Le dernier build doit intégrer :
+L'APK autonome final a été construit avec :
 
 - `EXPO_PUBLIC_API_URL=https://memocycle.135-125-100-75.sslip.io`
 - le Client ID OAuth Android de production ;
 - le Client ID OAuth Web ;
 - la clé de publication locale décrite ci-dessus.
 
+Fichier local : `artifacts/memocycle-standalone.apk`.
+
+- Taille : `115006331` octets.
+- SHA-256 :
+  `9FC83E008DCDDC92B51890BD4A8FC8AE42781AA39C396556A3179DC7CA55376D`.
+- Signature APK v2 vérifiée avec le certificat MémoCycle et la SHA-1 attendue.
+- Release : `v1.0.0-beta.1` sur GitHub :
+  `https://github.com/bindarst/Memocycle/releases/tag/v1.0.0-beta.1`.
+- Téléchargement direct :
+  `https://github.com/bindarst/Memocycle/releases/download/v1.0.0-beta.1/memocycle-android-v1.0.0-beta.1.apk`.
+
 Étapes restantes :
 
-1. Créer les deux Client IDs OAuth dans Google Cloud.
-2. Mettre à jour le `.env` OVH et redémarrer uniquement `memocycle-api`.
-3. Exécuter `npx expo prebuild --platform android`, puis construire
-   `assembleRelease` avec Java 17 et le SDK Android.
-4. Copier l'APK final dans `artifacts/memocycle-standalone.apk`.
-5. Installer l'APK sur un téléphone, tester la connexion Google et une
+1. Ajouter le compte du propriétaire comme utilisateur test OAuth, ou finaliser
+   puis publier les documents juridiques avant de passer OAuth en production.
+2. Télécharger la release sur un téléphone et tester la connexion Google et une
    synchronisation complète contre l'API OVH.
-6. Publier l'APK comme asset d'une GitHub Release. Les APK sont exclus du dépôt
-   car l'artefact dépasse la limite habituelle d'un fichier GitHub.
-7. Mettre à jour ce document, `README.md` et `docs/RELEASE.md`, puis pousser le
+3. Mettre à jour ce document, `README.md` et `docs/RELEASE.md`, puis pousser le
    commit final.
 
 ## Vérifications déjà obtenues
@@ -105,7 +110,9 @@ test Android et embarque l'ancienne URL `https://api.memocycle.app`. Il doit don
 - Tests métier et SQLite : 22/22.
 - Tests d'intégration SQLite/PostgreSQL : 11/11.
 - Expo Doctor : 21/21.
-- Build Android natif autonome : réussi avec la signature de test.
+- Build Android natif autonome : réussi avec la signature de production.
+- URL OVH et client OAuth Web vérifiés dans le bundle Android.
+- Signature v2 et certificat de production vérifiés avec `apksigner`.
 - Déploiement OVH : API et PostgreSQL sains.
 - Caddy et certificat Let's Encrypt : actifs.
 - Les conteneurs Equaz contrôlés sont restés sains après le déploiement.

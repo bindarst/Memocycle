@@ -7,7 +7,9 @@
 - Tests d’intégration SQLite/PostgreSQL : 11/11 réussis après application des deux migrations de production.
 - Expo Doctor : 21/21 contrôles réussis.
 - Bundles Hermes Android et iOS : exportés avec succès.
-- Build Android natif autonome : réussi et installé sur un appareil physique.
+- Build Android natif autonome signé pour la production : réussi. La nouvelle
+  bêta attend un essai sur appareil ; aucun téléphone ADB n'était connecté lors
+  du dernier build.
 - Image Docker API et configuration Compose de production : validées.
 - Audit npm : aucune vulnérabilité connue signalée.
 
@@ -17,7 +19,9 @@ OAuth réels ni la validation des stores.
 
 ## Configurations externes nécessaires
 
-- Identifiants Google Android, iOS et Web ; SHA des clés Android de développement et de production ; origine Web autorisée pour la page de suppression.
+- Les identifiants Google Android et Web et la signature Android de production
+  sont configurés. L'identifiant iOS, Apple Sign-In et la publication OAuth
+  générale restent à finaliser.
 - Bundle ID, entitlement Sign in with Apple, identifiants Apple Developer et signatures iOS.
 - L'API OVH et sa base PostgreSQL indépendante sont déployées. Le certificat TLS
   est actif sur `memocycle.135-125-100-75.sslip.io`. Un domaine définitif pourra
