@@ -53,6 +53,8 @@ export const settingsInput = z
       z.literal(30),
       z.literal(45),
       z.literal(60),
+      z.literal(90),
+      z.literal(120),
       z.null(),
     ]),
     remindersEnabled: z.boolean(),
@@ -61,5 +63,28 @@ export const settingsInput = z
     morningSummary: z.boolean(),
     appearance: z.enum(["system", "light", "dark"]),
     onboardingCompleted: z.boolean(),
+    preferredStudyTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable()
+      .default(null),
+    quietHoursStart: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable()
+      .default(null),
+    quietHoursEnd: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable()
+      .default(null),
+    morningSummaryTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable()
+      .default(null),
+    overdueRemindersEnabled: z.boolean().default(true),
+    examRemindersEnabled: z.boolean().default(true),
+    desiredRetention: z.number().min(0.8).max(0.97).default(0.9),
   })
   .strict();

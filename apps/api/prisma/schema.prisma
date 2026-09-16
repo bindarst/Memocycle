@@ -28,6 +28,7 @@ model User {
   exams Exam[]
   plans ReviewPlan[]
   events ReviewEvent[]
+  studyItems StudyItem[]
   mutations ProcessedMutation[]
   changes SyncChange[]
   settings UserSettings?
@@ -147,11 +148,33 @@ model Course {
   module Module? @relation(fields:[moduleId,subjectId,userId],references:[id,subjectId,userId],onDelete:NoAction)
   plan ReviewPlan?
   events ReviewEvent[]
+  studyItems StudyItem[]
   @@unique([id,userId])
   @@index([userId,updatedAt])
   @@index([subjectId])
   @@index([moduleId])
   @@map("courses")
+}
+model StudyItem {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  courseId String @db.Uuid @map("course_id")
+  type String
+  front String?
+  back String?
+  hint String?
+  position Int @default(0)
+  archivedAt DateTime? @db.Timestamptz @map("archived_at")
+  createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")
+  deletedAt DateTime? @db.Timestamptz @map("deleted_at")
+  version Int @default(1)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  course Course @relation(fields:[courseId,userId],references:[id,userId],onDelete:Cascade)
+  @@unique([id,userId])
+  @@index([userId,updatedAt])
+  @@index([courseId])
+  @@map("study_items")
 }
 model Exam {
   id String @id @default(uuid()) @db.Uuid
@@ -186,6 +209,15 @@ model ReviewPlan {
   lastReviewedAt DateTime? @db.Timestamptz @map("last_reviewed_at")
   completedAt DateTime? @db.Timestamptz @map("completed_at")
   status String @default("active")
+  desiredRetention Float @default(0.90) @map("desired_retention")
+  difficulty Float?
+  stability Float?
+  retrievability Float?
+  scheduledDays Int? @map("scheduled_days")
+  elapsedDays Int? @map("elapsed_days")
+  reps Int @default(0)
+  lapses Int @default(0)
+  lastRating String? @map("last_rating")
   version Int @default(1)
   createdAt DateTime @default(now()) @db.Timestamptz @map("created_at")
   updatedAt DateTime @updatedAt @db.Timestamptz @map("updated_at")

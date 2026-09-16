@@ -1,18 +1,25 @@
 import {
   CLASSIC_REVIEW_INTERVALS_HOURS,
   calculateNextReviewAt,
+  calculateAdaptiveReview,
   entitySchema,
   type ReviewCommand,
+  type ReviewRating,
+  type MemoryState,
 } from "@memocycle/contracts";
 import { database } from "../database/database";
 import { all, find, put, enqueue, changed } from "../database/repository";
 import { courseSchema, planSchema } from "../database/entities";
 import { newId } from "../utils/ids";
+import { planToMemoryState } from "./fsrsScheduler";
+
 export async function completeReview(
   userId: string,
   courseId: string,
   command: ReviewCommand["command"],
   mutationId: string,
+  rating?: ReviewRating,
+  desiredRetention?: number,
 ) {
   const db = await database();
   await db.withExclusiveTransactionAsync(async (tx) => {
@@ -55,13 +62,38 @@ export async function completeReview(
     const restart = command !== "complete";
     const planId = plan?.id ?? newId();
     const eventId = mutationId;
+    const cycle = plan?.scheduleVersion ?? 1;
+    const schedulerType = plan?.schedulerType ?? "fsrs";
+    const retention = desiredRetention ?? plan?.desiredRetention ?? 0.90;
+    const effectiveRating: ReviewRating = rating ?? "good";
+
+    let next: string | null = null;
+    let memoryState: MemoryState | null = null;
+    let step = restart ? 0 : plan!.currentStep;
+    let status = "active";
+
     const intervals = restart
       ? [...CLASSIC_REVIEW_INTERVALS_HOURS]
       : plan!.intervalsJson;
-    const step = restart ? 0 : plan!.currentStep;
-    const cycle = plan?.scheduleVersion ?? 1;
-    const next =
-      calculateNextReviewAt(at, step, intervals)?.toISOString() ?? null;
+
+    if (schedulerType === "fsrs") {
+      const prevState = restart ? null : planToMemoryState(plan!, at);
+      const adaptiveResult = calculateAdaptiveReview({
+        completedAt: at,
+        rating: effectiveRating,
+        previousState: prevState,
+        desiredRetention: retention,
+      });
+      next = adaptiveResult.nextReviewAt.toISOString();
+      memoryState = adaptiveResult.memoryState;
+      step = restart ? 1 : Math.min(plan!.currentStep + 1, 6);
+      status = "active";
+    } else {
+      next = calculateNextReviewAt(at, step, intervals)?.toISOString() ?? null;
+      step = restart ? 1 : Math.min(step + 1, 6);
+      status = next ? "active" : "completed";
+    }
+
     const common = { userId, updatedAt: at.toISOString(), deletedAt: null };
     const eventEntity = entitySchema.parse({
       ...common,
@@ -76,7 +108,7 @@ export async function completeReview(
           : command === "restart"
             ? "schedule_restarted"
             : "review_completed",
-      stepIndex: restart ? null : step,
+      stepIndex: restart ? null : (plan ? plan.currentStep : null),
       scheduledAt: restart ? null : plan!.nextReviewAt,
       completedAt: at.toISOString(),
       delayMinutes: restart
@@ -87,22 +119,34 @@ export async function completeReview(
               (at.getTime() - new Date(plan!.nextReviewAt!).getTime()) / 60000,
             ),
           ),
+      confidence: rating ?? (command === "start" ? "good" : null),
     });
+
     const planEntity = entitySchema.parse({
       ...common,
       id: planId,
       version: (plan?.version ?? 0) + 1,
       courseId,
-      schedulerType: "classic",
+      schedulerType,
       intervalsJson: intervals,
       scheduleVersion: command === "restart" ? cycle + 1 : cycle,
-      currentStep: restart ? 1 : Math.min(step + 1, 6),
+      currentStep: step,
       nextReviewAt: next,
       startedAt: restart ? at.toISOString() : plan!.startedAt,
       lastReviewedAt: restart ? null : at.toISOString(),
-      completedAt: next ? null : at.toISOString(),
-      status: next ? "active" : "completed",
+      completedAt: status === "completed" ? at.toISOString() : null,
+      status,
+      desiredRetention: retention,
+      difficulty: memoryState?.difficulty ?? plan?.difficulty ?? null,
+      stability: memoryState?.stability ?? plan?.stability ?? null,
+      retrievability: memoryState?.retrievability ?? plan?.retrievability ?? null,
+      scheduledDays: memoryState?.scheduledDays ?? plan?.scheduledDays ?? null,
+      elapsedDays: memoryState?.elapsedDays ?? plan?.elapsedDays ?? null,
+      reps: memoryState?.reps ?? (restart ? 1 : (plan?.reps ?? 0) + 1),
+      lapses: memoryState?.lapses ?? plan?.lapses ?? 0,
+      lastRating: effectiveRating,
     });
+
     // A new event references its plan. On the first study, create that parent
     // earlier in the same transaction; later validations keep the append-first order.
     if (!plan) await put(tx, "reviewPlan", planEntity, "pending");
@@ -115,7 +159,7 @@ export async function completeReview(
         ...course,
         ...common,
         version: course.version,
-        status: next ? "active" : "completed",
+        status: status === "completed" ? "completed" : "active",
         studiedAt: restart ? at.toISOString() : course.studiedAt,
       },
       "pending",
@@ -126,8 +170,10 @@ export async function completeReview(
       reviewPlanId: planId,
       eventId,
       completedAt: at.toISOString(),
-      stepIndex: step,
+      stepIndex: plan ? plan.currentStep : 0,
       cycle,
+      rating: effectiveRating,
+      desiredRetention: retention,
     };
     await enqueue(tx, userId, {
       clientMutationId: mutationId,

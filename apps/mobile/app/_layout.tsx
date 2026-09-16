@@ -57,6 +57,7 @@ function Gate() {
         <Stack.Screen name="subject" />
         <Stack.Screen name="module" />
         <Stack.Screen name="review" />
+        <Stack.Screen name="session" />
         <Stack.Screen name="stats" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="paywall" />

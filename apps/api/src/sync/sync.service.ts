@@ -5,12 +5,14 @@ import { z } from "zod";
 import {
   CLASSIC_REVIEW_INTERVALS_HOURS,
   calculateNextReviewAt,
+  calculateAdaptiveReview,
   entitySchema,
   entityTypeSchema,
   subjectInput,
   moduleInput,
   courseInput,
   examInput,
+  studyItemInput,
   settingsInput,
   reviewCommandSchema,
   mutationResultSchema,
@@ -19,6 +21,7 @@ import {
   type MutationResult,
   type SyncRequest,
   type SyncResponse,
+  type MemoryState,
 } from "@memocycle/contracts";
 import { PrismaService } from "../database/prisma.service";
 type Tx = Prisma.TransactionClient;
@@ -38,6 +41,8 @@ export class SyncService {
         return tx.course.findFirst({ where });
       case "exam":
         return tx.exam.findFirst({ where });
+      case "studyItem":
+        return tx.studyItem.findFirst({ where });
       case "reviewPlan":
         return tx.reviewPlan.findFirst({ where });
       case "reviewEvent":
@@ -148,23 +153,69 @@ export class SyncService {
         return fail("rejected", "Le cycle doit être terminé");
       const restarting = c.command !== "complete";
       const cycle = c.command === "restart" ? c.cycle + 1 : c.cycle;
-      const intervals = restarting
-        ? [...CLASSIC_REVIEW_INTERVALS_HOURS]
-        : z.array(z.number().positive()).parse(plan!.intervalsJson);
-      const next = calculateNextReviewAt(
-        at,
-        restarting ? 0 : c.stepIndex,
-        intervals,
-      );
+      const schedulerType = plan?.schedulerType ?? "fsrs";
+      const desiredRetention = plan?.desiredRetention ?? c.desiredRetention ?? 0.9;
+      const effectiveRating = c.rating ?? "good";
+
+      let next: Date | null = null;
+      let memoryState: MemoryState | null = null;
+      let step = restarting ? 0 : c.stepIndex;
+      let status = "active";
+      let intervals: number[] = [];
+
+      if (schedulerType === "fsrs") {
+        const prevState = restarting || !plan ? null : {
+          stability: plan.stability ?? undefined,
+          difficulty: plan.difficulty ?? undefined,
+          retrievability: plan.retrievability ?? undefined,
+          scheduledDays: plan.scheduledDays ?? undefined,
+          elapsedDays: plan.elapsedDays ?? undefined,
+          reps: plan.reps ?? 0,
+          lapses: plan.lapses ?? 0,
+          lastReviewDate: plan.lastReviewedAt ? plan.lastReviewedAt.toISOString() : plan.startedAt.toISOString(),
+        };
+        const adaptiveResult = calculateAdaptiveReview({
+          completedAt: at,
+          rating: effectiveRating,
+          previousState: prevState,
+          desiredRetention,
+        });
+        next = adaptiveResult.nextReviewAt;
+        memoryState = adaptiveResult.memoryState;
+        step = restarting ? 1 : Math.min(c.stepIndex + 1, 6);
+        status = "active";
+        intervals = [];
+      } else {
+        intervals = restarting
+          ? [...CLASSIC_REVIEW_INTERVALS_HOURS]
+          : z.array(z.number().positive()).parse(plan!.intervalsJson);
+        next = calculateNextReviewAt(
+          at,
+          restarting ? 0 : c.stepIndex,
+          intervals,
+        );
+        step = restarting ? 1 : Math.min(c.stepIndex + 1, 6);
+        status = next ? "active" : "completed";
+      }
+
       const data = {
         intervalsJson: intervals,
-        schedulerType: "classic",
+        schedulerType,
         scheduleVersion: cycle,
-        currentStep: restarting ? 1 : Math.min(c.stepIndex + 1, 6),
+        currentStep: step,
         nextReviewAt: next,
-        status: next ? "active" : "completed",
+        status,
         lastReviewedAt: restarting ? null : at,
-        completedAt: next ? null : at,
+        completedAt: status === "completed" ? at : null,
+        desiredRetention,
+        difficulty: memoryState?.difficulty ?? plan?.difficulty ?? null,
+        stability: memoryState?.stability ?? plan?.stability ?? null,
+        retrievability: memoryState?.retrievability ?? plan?.retrievability ?? null,
+        scheduledDays: memoryState?.scheduledDays ?? plan?.scheduledDays ?? null,
+        elapsedDays: memoryState?.elapsedDays ?? plan?.elapsedDays ?? null,
+        reps: memoryState?.reps ?? (restarting ? 1 : (plan?.reps ?? 0) + 1),
+        lapses: memoryState?.lapses ?? plan?.lapses ?? 0,
+        lastRating: effectiveRating,
         ...(restarting ? { startedAt: at } : {}),
       };
       const updated = plan
@@ -205,6 +256,7 @@ export class SyncService {
                   (at.getTime() - plan!.nextReviewAt!.getTime()) / 60000,
                 ),
               ),
+          confidence: c.rating ?? (c.command === "start" ? "good" : null),
           deviceId,
         },
       });
@@ -213,7 +265,7 @@ export class SyncService {
       const updatedCourse = await tx.course.update({
         where: { id: course.id },
         data: {
-          status: next ? "active" : "completed",
+          status: status === "completed" ? "completed" : "active",
           ...(restarting ? { studiedAt: at } : {}),
         },
       });
@@ -283,6 +335,9 @@ export class SyncService {
         case "exam":
           entity = await tx.exam.update({ where: { id: m.entityId }, data });
           break;
+        case "studyItem":
+          entity = await tx.studyItem.update({ where: { id: m.entityId }, data });
+          break;
         case "course": {
           entity = await tx.course.update({ where: { id: m.entityId }, data });
           const plan = await tx.reviewPlan.findFirst({
@@ -298,6 +353,16 @@ export class SyncService {
                 data: { ...data, status: "deleted", nextReviewAt: null },
               }),
             );
+          const studyItems = await tx.studyItem.findMany({
+            where: { courseId: m.entityId, userId, deletedAt: null },
+          });
+          for (const item of studyItems) {
+            const updatedItem = await tx.studyItem.update({
+              where: { id: item.id },
+              data,
+            });
+            await this.change(tx, userId, "studyItem", updatedItem);
+          }
           // Events remain immutable; deleted course hides them until retention purge.
           break;
         }
@@ -348,6 +413,21 @@ export class SyncService {
               : await tx.course.update({
                   where: { id: m.entityId },
                   data: { ...data, status, ...update },
+                });
+          break;
+        }
+        case "studyItem": {
+          const data = studyItemInput.parse(m.payload);
+          const course = await tx.course.findFirst({
+            where: { id: data.courseId, userId, deletedAt: null },
+          });
+          if (!course) return fail("rejected", "Cours indisponible");
+          entity =
+            m.operation === "create"
+              ? await tx.studyItem.create({ data: { ...common, ...data } })
+              : await tx.studyItem.update({
+                  where: { id: m.entityId },
+                  data: { ...data, ...update },
                 });
           break;
         }

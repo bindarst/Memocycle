@@ -4,6 +4,7 @@ export const tables: Record<EntityType, string> = {
   module: "modules",
   course: "courses",
   exam: "exams",
+  studyItem: "study_items",
   reviewPlan: "review_plans",
   reviewEvent: "review_events",
   userSettings: "user_settings",
@@ -15,6 +16,8 @@ const foreignKeys: Record<string, string> = {
     ", FOREIGN KEY(owner_user_id,subject_id) REFERENCES subjects(owner_user_id,id) ON DELETE CASCADE, FOREIGN KEY(owner_user_id,module_id,subject_id) REFERENCES modules(owner_user_id,id,subject_id) ON DELETE CASCADE",
   exams:
     ", FOREIGN KEY(owner_user_id,subject_id) REFERENCES subjects(owner_user_id,id) ON DELETE CASCADE, FOREIGN KEY(owner_user_id,module_id,subject_id) REFERENCES modules(owner_user_id,id,subject_id) ON DELETE CASCADE",
+  study_items:
+    ", FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE",
   review_plans:
     ", FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE",
   review_events:
@@ -44,7 +47,9 @@ CREATE INDEX ${table}_owner ON ${table}(owner_user_id);
   `
 CREATE INDEX courses_subject ON courses(owner_user_id,subject_id);
 CREATE INDEX courses_module ON courses(owner_user_id,module_id);
+CREATE INDEX study_items_course ON study_items(owner_user_id,course_id);
 CREATE INDEX plans_due ON review_plans(owner_user_id,next_review_at);
+
 CREATE UNIQUE INDEX plans_course ON review_plans(owner_user_id,course_id);
 CREATE INDEX events_course ON review_events(owner_user_id,course_id);
 CREATE INDEX events_completed ON review_events(owner_user_id,completed_at);

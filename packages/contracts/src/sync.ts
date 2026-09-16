@@ -4,6 +4,7 @@ export const entityTypeSchema = z.enum([
   "module",
   "course",
   "exam",
+  "studyItem",
   "reviewPlan",
   "reviewEvent",
   "userSettings",

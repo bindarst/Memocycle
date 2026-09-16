@@ -225,6 +225,50 @@ describe("PostgreSQL transactions and synchronization", () => {
       (await db.reviewPlan.findUniqueOrThrow({ where: { id: plan } })).version,
     ).toBe(1);
   });
+  it("creates, updates and cascades deletion of study items via sync mutations", async () => {
+    const { course } = await seed();
+    const itemId = randomUUID();
+    const createItem = mutation("studyItem", itemId, {
+      courseId: course,
+      type: "flashcard",
+      front: "Recto Test",
+      back: "Verso Test",
+      hint: "Indice",
+      position: 0,
+      archivedAt: null,
+    });
+    const resCreate = await send([createItem]);
+    expect(resCreate.mutationResults[0]?.status).toBe("accepted");
+    expect(await db.studyItem.count({ where: { id: itemId, deletedAt: null } })).toBe(1);
+
+    const updateItem = mutation(
+      "studyItem",
+      itemId,
+      {
+        courseId: course,
+        type: "flashcard",
+        front: "Recto Modifié",
+        back: "Verso Test",
+        hint: null,
+        position: 1,
+        archivedAt: null,
+      },
+      "update",
+      1,
+    );
+    const resUpdate = await send([updateItem]);
+    expect(resUpdate.mutationResults[0]?.status).toBe("accepted");
+    expect(
+      (await db.studyItem.findUniqueOrThrow({ where: { id: itemId } })).front,
+    ).toBe("Recto Modifié");
+
+    // Deleting course cascades to mark studyItem deleted
+    const deleteCourse = mutation("course", course, {}, "delete", 1);
+    await send([deleteCourse]);
+    expect(
+      await db.studyItem.count({ where: { id: itemId, deletedAt: null } }),
+    ).toBe(0);
+  });
 });
 describe("sessions and account lifecycle", () => {
   it("stores only refresh hashes, rotates and revokes on replay", async () => {

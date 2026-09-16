@@ -51,6 +51,35 @@ describe("real SQLite offline workflow", () => {
       )?.n,
     ).toBe(4);
   });
+  it("creates StudyItem and performs FSRS adaptive review with rating offline", async () => {
+    const course = await seed();
+    const itemId = await save("studyItem", user, {
+      courseId: course,
+      type: "flashcard",
+      front: "Qu'est-ce qu'un transformateur ?",
+      back: "Un appareil statique convertissant une tension alternative.",
+      hint: "Machine électrique",
+      position: 0,
+      archivedAt: null,
+    });
+    const items = await all("studyItem", user);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.id).toBe(itemId);
+
+    await completeReview(user, course, "start", randomUUID(), "good");
+    const planAfterStart = (await all("reviewPlan", user))[0];
+    expect(planAfterStart?.schedulerType).toBe("fsrs");
+
+    const completeMutation = randomUUID();
+    await completeReview(user, course, "complete", completeMutation, "hard");
+    const planAfterComplete = (await all("reviewPlan", user))[0];
+    expect(planAfterComplete?.lastRating).toBe("hard");
+    expect(planAfterComplete?.stability).toBeDefined();
+
+    const events = await all("reviewEvent", user);
+    expect(events).toHaveLength(2);
+    expect(events[1]?.confidence).toBe("hard");
+  });
   it("rolls back event, plan, course and mutation if outbox insertion fails", async () => {
     const course = await seed();
     await completeReview(user, course, "start", randomUUID());
@@ -141,7 +170,7 @@ describe("real SQLite offline workflow", () => {
     );
     await migrate(old as unknown as SQLiteDatabase);
     expect(await old.getFirstAsync("PRAGMA user_version")).toEqual({
-      user_version: 2,
+      user_version: 3,
     });
     expect(
       await old.getFirstAsync<{ data: string; needs_apply: number }>(

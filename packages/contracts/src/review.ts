@@ -1,4 +1,7 @@
 import { z } from "zod";
+
+export const reviewRatingSchema = z.enum(["again", "hard", "good", "easy"]);
+
 export const reviewCommandSchema = z
   .object({
     command: z.enum(["start", "complete", "restart"]),
@@ -8,6 +11,8 @@ export const reviewCommandSchema = z
     completedAt: z.string().datetime(),
     stepIndex: z.number().int().min(0).max(6),
     cycle: z.number().int().min(1),
+    rating: reviewRatingSchema.optional(),
+    desiredRetention: z.number().min(0.8).max(0.97).optional(),
   })
   .strict();
 export type ReviewCommand = z.infer<typeof reviewCommandSchema>;

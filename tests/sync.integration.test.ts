@@ -43,3 +43,27 @@ it('retains outbox on network failure and safely replays a response lost after s
   const subjectId=await save('subject',bridge.userId,subjectInput.parse({title:'Offline'}));const normal=bridge.send as (body:unknown)=>Promise<unknown>;
   bridge.send=async(body:unknown)=>{await normal(body);throw new Error('connection dropped');};await expect(sync()).rejects.toThrow();expect(await pendingCount(bridge.userId)).toBe(1);expect(await a.getFirstAsync('SELECT retry_count,last_error FROM sync_outbox WHERE owner_user_id=?',bridge.userId)).toEqual({retry_count:1,last_error:'network_or_server_error'});bridge.send=normal;await sync();expect(await pendingCount(bridge.userId)).toBe(0);expect(await server.subject.count({where:{id:subjectId}})).toBe(1);
 });
+it('synchronizes StudyItem and FSRS memory state across devices without duplication',async()=>{
+  const {courseId}=await seed();
+  bridge.db=a;
+  const itemId=await save('studyItem',bridge.userId,{
+    courseId,
+    type:'flashcard',
+    front:'Formule loi d Ohm',
+    back:'U = R * I',
+    hint:'Électricité',
+    position:0,
+    archivedAt:null,
+  });
+  await completeReview(bridge.userId,courseId,'complete',randomUUID(),'good');
+  await sync();
+
+  bridge.db=b;
+  await sync();
+  const itemOnB=await find('studyItem',itemId,bridge.userId);
+  expect(itemOnB?.front).toBe('Formule loi d Ohm');
+  const planOnB=(await all('reviewPlan',bridge.userId))[0];
+  expect(planOnB?.lastRating).toBe('good');
+  expect(planOnB?.stability).toBeDefined();
+});
+

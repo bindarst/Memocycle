@@ -39,7 +39,11 @@ const config: ExpoConfig = {
     ],
     [
       "react-native-nitro-google-signin",
-      { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME },
+      {
+        iosUrlScheme:
+          process.env.GOOGLE_IOS_URL_SCHEME ||
+          "com.googleusercontent.apps.575543516415-qjfv5cn3hfsjg241n63edgtp1rhjqmar",
+      },
     ],
   ],
 };

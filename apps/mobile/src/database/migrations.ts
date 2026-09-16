@@ -42,6 +42,31 @@ const migrations = [
     DELETE FROM review_events WHERE owner_user_id=OLD.owner_user_id AND review_plan_id=OLD.id;
   END;
   `,
+  `
+  CREATE TABLE IF NOT EXISTS study_items (
+   id TEXT NOT NULL, owner_user_id TEXT NOT NULL, data TEXT NOT NULL CHECK(json_valid(data)),
+   version INTEGER NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
+   sync_status TEXT NOT NULL CHECK(sync_status IN ('synced','pending','conflict')),
+   subject_id TEXT GENERATED ALWAYS AS (json_extract(data,'$.subjectId')) VIRTUAL,
+   module_id TEXT GENERATED ALWAYS AS (json_extract(data,'$.moduleId')) VIRTUAL,
+   course_id TEXT GENERATED ALWAYS AS (json_extract(data,'$.courseId')) VIRTUAL,
+   review_plan_id TEXT GENERATED ALWAYS AS (json_extract(data,'$.reviewPlanId')) VIRTUAL,
+   next_review_at TEXT GENERATED ALWAYS AS (json_extract(data,'$.nextReviewAt')) VIRTUAL,
+   completed_at TEXT GENERATED ALWAYS AS (json_extract(data,'$.completedAt')) VIRTUAL,
+   PRIMARY KEY(owner_user_id,id), UNIQUE(owner_user_id,id,course_id),
+   FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS study_items_owner ON study_items(owner_user_id);
+  CREATE INDEX IF NOT EXISTS study_items_course ON study_items(owner_user_id,course_id);
+
+  CREATE TRIGGER IF NOT EXISTS study_items_course_insert BEFORE INSERT ON study_items
+  WHEN NOT EXISTS(SELECT 1 FROM courses WHERE owner_user_id=NEW.owner_user_id AND id=NEW.course_id)
+  BEGIN SELECT RAISE(ABORT,'course not found'); END;
+
+  CREATE TRIGGER IF NOT EXISTS courses_study_items_delete AFTER DELETE ON courses BEGIN
+    DELETE FROM study_items WHERE owner_user_id=OLD.owner_user_id AND course_id=OLD.id;
+  END;
+  `,
 ];
 export async function migrate(db: SQLiteDatabase) {
   await db.withExclusiveTransactionAsync(async (tx) => {
