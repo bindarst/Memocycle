@@ -44,11 +44,19 @@ export function EntityForm({
   subjectId,
   moduleId,
   entityId,
+  onCreated,
+  triggerTitle,
+  triggerVariant = "secondary",
+  triggerSize = "sm",
 }: {
   kind: "subject" | "module" | "exam";
   subjectId?: string;
   moduleId?: string;
   entityId?: string;
+  onCreated?: (id: string) => void;
+  triggerTitle?: string;
+  triggerVariant?: "primary" | "secondary" | "ghost" | "destructive";
+  triggerSize?: "sm" | "md" | "lg";
 }) {
   const c = usePalette();
   const [open, setOpen] = useState(false);
@@ -85,13 +93,15 @@ export function EntityForm({
     setOpen(true);
   };
 
+  const defaultButtonTitle = entityId ? `Modifier ${name}` : `Ajouter ${name}`;
+
   return (
     <>
       <Button
-        size="sm"
-        variant="secondary"
+        size={triggerSize}
+        variant={triggerVariant}
         icon={entityId ? PencilEdit01Icon : Add01Icon}
-        title={entityId ? `Modifier ${name}` : `Ajouter ${name}`}
+        title={triggerTitle ?? defaultButtonTitle}
         onPress={openForm}
       />
       <Modal
@@ -254,6 +264,9 @@ export function EntityForm({
                   const resolvedSubjectId = String(
                     existing?.subjectId ?? subjectId ?? "",
                   );
+                  if ((kind === "module" || kind === "exam") && !resolvedSubjectId) {
+                    throw new Error("Choisis une matière.");
+                  }
                   const resolvedModuleId =
                     existing?.moduleId === null
                       ? null
@@ -290,7 +303,10 @@ export function EntityForm({
                             examAt: new Date(timestamp).toISOString(),
                           });
                         })();
-                  await save(kind, userId, input, entityId);
+                  const savedId = await save(kind, userId, input, entityId);
+                  if (!entityId) {
+                    onCreated?.(savedId);
+                  }
                   setOpen(false);
                 })
               }

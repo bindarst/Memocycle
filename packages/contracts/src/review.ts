@@ -19,11 +19,12 @@ export const reviewCommandSchema = z
     completedAt: z.string().datetime(),
     stepIndex: z.number().int().min(0).max(6),
     cycle: z.number().int().min(1),
-    rating: reviewRatingSchema.optional(),
-    desiredRetention: z.number().min(0.8).max(0.97).optional(),
-    durationSeconds: z.number().int().min(0).optional(),
-    sessionType: reviewSessionTypeSchema.default("scheduled_review").optional(),
-    studyMethod: studyMethodSchema.optional(),
+    rating: reviewRatingSchema.nullable().optional(),
+    desiredRetention: z.number().min(0.8).max(0.97).nullable().optional(),
+    durationSeconds: z.number().int().min(0).nullable().optional(),
+    sessionType: reviewSessionTypeSchema.default("scheduled_review").nullable().optional(),
+    studyMethod: studyMethodSchema.nullable().optional(),
   })
   .strict();
 export type ReviewCommand = z.infer<typeof reviewCommandSchema>;
+

@@ -74,9 +74,9 @@ export const eventSchema = entitySchema.extend({
   delayMinutes: z.number(),
   confidence: z.string().nullable().optional(),
   deviceId: z.string().nullable().optional(),
-  durationSeconds: z.number().int().min(0).optional(),
-  sessionType: reviewSessionTypeSchema.optional(),
-  studyMethod: studyMethodSchema.optional(),
+  durationSeconds: z.number().int().min(0).nullable().optional(),
+  sessionType: reviewSessionTypeSchema.nullable().optional(),
+  studyMethod: studyMethodSchema.nullable().optional(),
 });
 
 export type Course = z.infer<typeof courseSchema>;

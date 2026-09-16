@@ -24,7 +24,9 @@ import {
   useEntities,
   usePalette,
 } from "./components";
+import { EntityForm } from "./EntityForm";
 import { AppIcon } from "./Icon";
+import { radius } from "../theme/tokens";
 import type { Exam } from "../database/entities";
 
 type Values = {
@@ -55,6 +57,7 @@ export function CourseForm({
   const { userId } = useAuth();
   const a = useAction();
   const [showOptions, setShowOptions] = useState(false);
+  const [subjectError, setSubjectError] = useState("");
   const subjects = useEntities("subject");
   const modules = useEntities("module");
   const allExams = useEntities("exam") as Exam[];
@@ -101,9 +104,14 @@ export function CourseForm({
     }
   }, [existing, reset]);
 
+  const titleValue = watch("title");
   const subjectId = watch("subjectId");
   const moduleId = watch("moduleId");
   const filteredModules = modules.filter((m) => m.subjectId === subjectId);
+
+  const isTitleValid = !!titleValue && titleValue.trim().length > 0;
+  const isSubjectValid = !!subjectId && subjects.some((s) => s.id === subjectId);
+  const isSubmitDisabled = a.busy || !isTitleValid || !isSubjectValid;
 
   const field = (name: keyof Values, label: string, multiline = false) => (
     <Controller
@@ -132,45 +140,78 @@ export function CourseForm({
         <Text style={{ fontSize: 13, fontWeight: "600", color: c.textSecondary }}>
           Matière *
         </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
-        >
-          {subjects.map((s) => {
-            const isSelected = subjectId === s.id;
-            return (
-              <Pressable
-                key={s.id}
-                onPress={() => {
-                  setValue("subjectId", s.id);
-                  setValue("moduleId", "");
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={String(s.title)}
-                style={({ pressed }) => ({
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 10,
-                  backgroundColor: isSelected ? c.primary : c.surface,
-                  borderWidth: 1,
-                  borderColor: isSelected ? c.primary : c.border,
-                  opacity: pressed ? 0.75 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: isSelected ? "700" : "500",
-                    color: isSelected ? c.onPrimary : c.textPrimary,
+        {subjects.length === 0 ? (
+          <View
+            style={{
+              padding: 14,
+              borderRadius: radius.card,
+              backgroundColor: c.surface,
+              borderWidth: 1,
+              borderColor: subjectError ? c.danger : c.border,
+              alignItems: "flex-start",
+              gap: 8,
+            }}
+          >
+            <Text style={{ fontSize: 13, color: c.textSecondary }}>
+              Aucune matière
+            </Text>
+            <EntityForm
+              kind="subject"
+              triggerTitle="Créer une matière"
+              triggerVariant="primary"
+              triggerSize="sm"
+              onCreated={(newSubjectId) => {
+                setValue("subjectId", newSubjectId);
+                setValue("moduleId", "");
+                setSubjectError("");
+              }}
+            />
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+          >
+            {subjects.map((s) => {
+              const isSelected = subjectId === s.id;
+              return (
+                <Pressable
+                  key={s.id}
+                  onPress={() => {
+                    setValue("subjectId", s.id);
+                    setValue("moduleId", "");
+                    setSubjectError("");
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={String(s.title)}
+                  style={({ pressed }) => ({
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 10,
+                    backgroundColor: isSelected ? c.primary : c.surface,
+                    borderWidth: 1,
+                    borderColor: isSelected ? c.primary : c.border,
+                    opacity: pressed ? 0.75 : 1,
+                  })}
                 >
-                  {String(s.title)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isSelected ? "700" : "500",
+                      color: isSelected ? c.onPrimary : c.textPrimary,
+                    }}
+                  >
+                    {String(s.title)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+        {subjectError ? (
+          <Text style={{ fontSize: 12, color: c.danger }}>{subjectError}</Text>
+        ) : null}
       </View>
 
       {subjectId && filteredModules.length > 0 ? (
@@ -389,15 +430,24 @@ export function CourseForm({
           fullWidth
           size="lg"
           title="Enregistrer"
-          disabled={a.busy}
-          onPress={() =>
+          disabled={isSubmitDisabled}
+          onPress={() => {
+            if (!isSubjectValid) {
+              setSubjectError("Choisis une matière.");
+              return;
+            }
             void handleSubmit((values) =>
               a.run(async () => {
+                const validSubjectId = values.subjectId?.trim();
+                if (!validSubjectId || !subjects.some((s) => s.id === validSubjectId)) {
+                  setSubjectError("Choisis une matière.");
+                  return;
+                }
                 const priorityNum = Number(values.priority);
                 const input = courseInput.parse({
                   title: values.title,
                   description: values.description || null,
-                  subjectId: values.subjectId,
+                  subjectId: validSubjectId,
                   moduleId: values.moduleId || null,
                   estimatedReviewMinutes: Number(values.minutes),
                   importance: Number(values.importance),
@@ -421,8 +471,8 @@ export function CourseForm({
                 const courseId = await save("course", userId, input, id);
                 router.replace(`/course/${courseId}`);
               }),
-            )()
-          }
+            )();
+          }}
         />
         <Button
           variant="ghost"
@@ -434,3 +484,4 @@ export function CourseForm({
     </Screen>
   );
 }
+

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ZodError } from "zod";
 import {
   Pressable,
   ScrollView,
@@ -880,16 +879,21 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
   );
 }
 
+import { isZodLikeError, sanitizeErrorMessage } from "../utils/errors";
+export { isZodLikeError, sanitizeErrorMessage };
+
 export function ErrorText({ message }: { message?: string | null }) {
   const c = usePalette();
-  return message ? (
+  if (!message) return null;
+  const cleanMessage = sanitizeErrorMessage(message);
+  return (
     <Text
       accessibilityRole="alert"
       style={[typography.caption, { color: c.danger, lineHeight: 18 }]}
     >
-      {message}
+      {cleanMessage}
     </Text>
-  ) : null;
+  );
 }
 
 export function useAction() {
@@ -904,13 +908,13 @@ export function useAction() {
     try {
       await action();
     } catch (e) {
-      setError(
-        e instanceof ZodError
-          ? "Vérifie les champs obligatoires, les dates et les valeurs saisies."
-          : e instanceof Error
-          ? e.message
-          : "Impossible de terminer cette action."
-      );
+      if (isZodLikeError(e)) {
+        setError("Vérifie les informations saisies.");
+      } else if (e instanceof Error) {
+        setError(sanitizeErrorMessage(e.message));
+      } else {
+        setError("Impossible de terminer cette action.");
+      }
     } finally {
       locked.current = false;
       setBusy(false);

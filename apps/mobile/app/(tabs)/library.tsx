@@ -78,14 +78,12 @@ export default function Library() {
         }}
       >
         <Label large>Cours</Label>
-        {subjects.length > 0 && (
-          <Button
-            size="sm"
-            icon={Add01Icon}
-            title="Nouveau cours"
-            onPress={() => router.push("/course/new")}
-          />
-        )}
+        <Button
+          size="sm"
+          icon={Add01Icon}
+          title="Nouveau cours"
+          onPress={() => router.push("/course/new")}
+        />
       </View>
 
       <Field

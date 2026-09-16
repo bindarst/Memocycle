@@ -184,7 +184,7 @@ export async function completeReview(
       {
         ...course,
         ...common,
-        version: course.version,
+        version: (course.version ?? 0) + 1,
         status: status === "completed" ? "completed" : "active",
         studiedAt: restart ? at.toISOString() : course.studiedAt,
       },
@@ -200,6 +200,9 @@ export async function completeReview(
       cycle,
       rating: effectiveRating,
       desiredRetention: retention,
+      durationSeconds: durationSeconds ?? null,
+      sessionType,
+      studyMethod: studyMethod ?? null,
     };
     await enqueue(tx, userId, {
       clientMutationId: mutationId,
