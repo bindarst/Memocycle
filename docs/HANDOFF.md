@@ -97,11 +97,15 @@ Fichier local : `artifacts/memocycle-standalone.apk`.
   `https://github.com/bindarst/Memocycle/releases/tag/v1.0.0-beta.1`.
 - Téléchargement direct :
   `https://github.com/bindarst/Memocycle/releases/download/v1.0.0-beta.1/memocycle-android-v1.0.0-beta.1.apk`.
+- Installé avec succès sur un Samsung `SM-S938B` le 16 septembre 2026 après
+  suppression de l'ancien build portant une signature incompatible.
+- Android confirme `versionName=1.0.0`, `versionCode=1` et l'activité
+  `app.memocycle.mobile/.MainActivity` visible au premier plan.
 
 Étapes restantes :
 
-1. Télécharger la release sur un téléphone et tester la connexion Google et une
-   synchronisation complète contre l'API OVH.
+1. Tester la connexion Google et une synchronisation complète contre l'API OVH
+   depuis le téléphone où la version 1.0.0 est maintenant installée.
 2. Finaliser puis publier les documents juridiques avant de passer OAuth en
    production pour tous les utilisateurs.
 
@@ -112,6 +116,7 @@ Fichier local : `artifacts/memocycle-standalone.apk`.
 - Tests d'intégration SQLite/PostgreSQL : 11/11.
 - Expo Doctor : 21/21.
 - Build Android natif autonome : réussi avec la signature de production.
+- Installation et démarrage sur téléphone Android physique : réussis.
 - URL OVH et client OAuth Web vérifiés dans le bundle Android.
 - Signature v2 et certificat de production vérifiés avec `apksigner`.
 - Déploiement OVH : API et PostgreSQL sains.

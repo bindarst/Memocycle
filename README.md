@@ -96,9 +96,10 @@ fichiers `.env` restent hors Git.
 
 Le parcours métier et ses transactions sont implémentés et testés. L'API et sa
 base PostgreSQL isolée sont actives sur OVH. Les clients OAuth Android et Web
-sont créés, l'API est configurée et l'APK de production est signé. La
+sont créés, l'API est configurée et l'APK de production est signé. La version
+1.0.0 a été installée et démarrée sur un téléphone Android physique. La
 publication OAuth générale reste conditionnée aux mentions légales validées et
-aux derniers essais sur appareil. Le compte du propriétaire est autorisé comme
+aux essais fonctionnels complets. Le compte du propriétaire est autorisé comme
 utilisateur test Google. Les limites précises sont consignées dans
 [docs/RELEASE.md](docs/RELEASE.md), et les choix de synchronisation dans
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

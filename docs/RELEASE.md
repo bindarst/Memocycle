@@ -7,9 +7,9 @@
 - Tests d’intégration SQLite/PostgreSQL : 11/11 réussis après application des deux migrations de production.
 - Expo Doctor : 21/21 contrôles réussis.
 - Bundles Hermes Android et iOS : exportés avec succès.
-- Build Android natif autonome signé pour la production : réussi. La nouvelle
-  bêta attend un essai sur appareil ; aucun téléphone ADB n'était connecté lors
-  du dernier build.
+- Build Android natif autonome signé pour la production : réussi. La version
+  1.0.0 a été installée et démarrée sur un Samsung `SM-S938B` ; la connexion
+  Google et la synchronisation restent à valider par une interaction utilisateur.
 - Image Docker API et configuration Compose de production : validées.
 - Audit npm : aucune vulnérabilité connue signalée.
 
