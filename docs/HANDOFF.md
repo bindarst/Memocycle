@@ -54,6 +54,9 @@ La base GMAO Equaz n'a pas été utilisée ni modifiée. Les fichiers utiles son
   `575543516415-aaie2tg4vtqbshlf4r8k5vc98ngb181d.apps.googleusercontent.com`.
 - Ces deux Client IDs publics sont actifs dans le `.env` OVH et dans le build
   mobile. Le secret du client Web n'est pas utilisé par l'application.
+- Le compte Google du propriétaire a été ajouté comme utilisateur test le
+  16 septembre 2026. Il peut se connecter pendant que l'application reste en
+  mode `Test`.
 - OAuth reste en mode `Test`. Le passage en production exige une page d'accueil,
   une politique de confidentialité et des conditions validées. Ne pas publier
   les textes provisoires présents dans `infra/public` comme documents juridiques.
@@ -97,12 +100,10 @@ Fichier local : `artifacts/memocycle-standalone.apk`.
 
 Étapes restantes :
 
-1. Ajouter le compte du propriétaire comme utilisateur test OAuth, ou finaliser
-   puis publier les documents juridiques avant de passer OAuth en production.
-2. Télécharger la release sur un téléphone et tester la connexion Google et une
+1. Télécharger la release sur un téléphone et tester la connexion Google et une
    synchronisation complète contre l'API OVH.
-3. Mettre à jour ce document, `README.md` et `docs/RELEASE.md`, puis pousser le
-   commit final.
+2. Finaliser puis publier les documents juridiques avant de passer OAuth en
+   production pour tous les utilisateurs.
 
 ## Vérifications déjà obtenues
 
