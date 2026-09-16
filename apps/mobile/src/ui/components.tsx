@@ -368,7 +368,7 @@ export function IconButton({
   variant = "outline",
   danger = false,
   disabled = false,
-  size = 38,
+  size = 40,
   style,
 }: {
   icon: IconType;

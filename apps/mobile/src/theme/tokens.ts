@@ -39,16 +39,16 @@ export const colors = {
 
 export const typography = {
   screenTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "700" as const,
-    lineHeight: 30,
-    letterSpacing: -0.4,
+    lineHeight: 32,
+    letterSpacing: -0.5,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "600" as const,
-    lineHeight: 22,
-    letterSpacing: -0.2,
+    lineHeight: 24,
+    letterSpacing: -0.3,
   },
   body: {
     fontSize: 15,
