@@ -1,12 +1,10 @@
 import React from "react";
-import { router } from "expo-router";
 import {
   Image,
   Platform,
   StyleSheet,
   Text,
   View,
-  Pressable,
 } from "react-native";
 import { GoogleSignInButton } from "react-native-nitro-google-signin";
 import * as Apple from "expo-apple-authentication";
@@ -92,27 +90,6 @@ export default function Welcome() {
 
         <ErrorText message={a.error || authError} />
 
-        <View style={styles.legalRow}>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel="Confidentialité"
-            onPress={() => router.push("/legal/privacy")}
-          >
-            <Text style={[styles.legalLink, { color: c.textSecondary }]}>
-              Confidentialité
-            </Text>
-          </Pressable>
-          <Text style={{ color: c.textSecondary, fontSize: 12 }}>·</Text>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel="Conditions"
-            onPress={() => router.push("/legal/terms")}
-          >
-            <Text style={[styles.legalLink, { color: c.textSecondary }]}>
-              Conditions
-            </Text>
-          </Pressable>
-        </View>
       </View>
     </Screen>
   );
@@ -125,16 +102,5 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontWeight: "700",
     letterSpacing: -0.5,
-  },
-  legalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 8,
-  },
-  legalLink: {
-    fontSize: 12,
-    fontWeight: "500",
   },
 });

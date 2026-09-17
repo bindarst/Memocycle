@@ -26,8 +26,8 @@ OAuth réels ni la validation des stores.
 - L'API OVH et sa base PostgreSQL indépendante sont déployées. Le certificat TLS
   est actif sur `memocycle.135-125-100-75.sslip.io`. Un domaine définitif pourra
   remplacer cette adresse sans déplacer les données.
-- Identité légale de l’éditeur, adresse de contact, support, conditions d’utilisation et politique de confidentialité validées. Les deux pages HTML fournies sont explicitement des documents à finaliser, pas des textes juridiques publiables.
-- Configurer la page de suppression avec `node --env-file=.env infra/configure-public.mjs` ; seules des valeurs publiques sont produites. Héberger `infra/public` sur `memocycle.app` après finalisation des documents. Le formulaire Google utilise une nouvelle preuve d’identité et ne crée pas de compte. Pour Apple, la procédure dans l’application et le contact support sont indiqués.
+- Si une publication sur le Play Store est prévue, préparer les informations et documents demandés par la plateforme avec les coordonnées définitives de l’éditeur. Aucun modèle de page juridique n’est fourni dans cette version.
+- Configurer la page de suppression avec `node --env-file=.env infra/configure-public.mjs` ; seules des valeurs publiques sont produites. Le formulaire Google utilise une nouvelle preuve d’identité et ne crée pas de compte. Pour Apple, la procédure dans l’application et le contact support sont indiqués.
 
 ## Parcours devant encore être vérifiés sur appareils
 
