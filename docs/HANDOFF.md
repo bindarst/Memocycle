@@ -77,12 +77,19 @@ Vérifications du 17 septembre : 0 erreur TypeScript, 0 erreur ESLint, 60/60 tes
 - APK vérifié avec `aapt`/`apksigner` : package `app.memocycle.mobile`, versionCode 2, versionName 1.0.1 ; signature de production inchangée. SHA-256 : `39AF35C0E65DE7283622E961255BF153907D4E6E29A029C06B5635B31A776E80`, identique dans OneDrive.
 - Le test manuel sur un téléphone requiert un appareil ADB connecté ; aucun appareil n'était visible lors de cette intervention. Faire un essai « Réviser », puis démarrer un chrono, quitter l'application, attendre et rouvrir le même cours.
 
-## Aide et documents intégrés — Android 1.0.2
+## Historique Android 1.0.2
 
 - `app/settings/help.tsx` est accessible par Profil > Aide et FAQ : 10 rubriques, recherche sans accents, réponses repliables et liens vers les fonctions décrites. Le contenu statique dans `src/help/helpContent.ts` fonctionne hors ligne.
-- `app/legal/privacy.tsx` et `app/legal/terms.tsx` sont des routes publiques, également accessibles avant connexion depuis l’accueil. Profil et l’aide ouvrent les mêmes pages natives ; les anciens liens externes de ces écrans ne sont plus nécessaires.
-- Le texte des documents décrit les traitements et conditions observables, mais reste explicitement **à finaliser avant publication publique**. Il manque l’identité juridique et le contact de l’éditeur, les bases légales et durées validées, la liste des sous-traitants/transferts, les modalités d’exercice des droits et les règles contractuelles applicables. Les anciennes pages `infra/public/privacy` et `infra/public/terms` restent des modèles incomplets et ne sont pas publiées par cette livraison.
-- Références de vérification juridique : RGPD, article 13 (`https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=fr`) et recommandations CNIL sur l’information des personnes. Obtenir les informations de l’éditeur et une validation juridique avant de présenter ces textes comme définitifs.
+- Cette version comportait des pages Confidentialité et Conditions provisoires. Elles ont été retirées dans la version 1.0.3 à la demande de l'éditeur, avec tous leurs liens dans l'application et les deux modèles HTML du dépôt.
 - Configuration mobile : version 1.0.2, `android.versionCode: 3`. Le dossier `apps/mobile/android` est ignoré par Git ; vérifier la version native et le keystore après tout `expo prebuild`.
 - Validation : 63/63 tests, TypeScript et ESLint sans erreur, `assembleRelease` réussi. APK signé vérifié avec `aapt` et `apksigner`, signature SHA-1 `2E:58:2C:B8:35:27:1E:CA:47:91:05:7F:AE:AA:D2:71:11:0C:DC:25` inchangée. SHA-256 `C09BE1F1DA197E4008EDDD6B1FE767154664DEA601639A06862E4E35507EEE0E`, identique dans `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.2.apk` et `app-release.apk`.
-- Aucun appareil ADB visible au moment de ce build : ouverture de l’aide et des textes sur téléphone à vérifier manuellement après installation.
+- Aucun appareil ADB visible au moment de ce build : ouverture de l’aide à vérifier manuellement après installation.
+
+## Android 1.0.3 — retrait des pages juridiques
+
+- L'aide et sa FAQ hors ligne restent dans Profil > Aide et FAQ. Le contenu « Compte, données et sécurité » répond maintenant explicitement à « Où sont sauvegardées mes données ? ».
+- Les routes natives `app/legal/*`, le contenu `src/legal/*`, les boutons Confidentialité/Conditions de l'accueil, du profil et de l'aide, ainsi que les modèles `infra/public/privacy` et `infra/public/terms` ont été supprimés. La page fonctionnelle de suppression du compte reste disponible.
+- Les cours, fiches, révisions et réglages sont enregistrés localement dans `memocycle.db` (SQLite) et synchronisés, après connexion, avec PostgreSQL dans le conteneur `memocycle-postgres` sur OVH, volume `memocycle-postgres-data`. Cette base est dédiée à MémoCycle et séparée de la GMAO Equaz. L'identification Google ne stocke pas les cours. Les chronos restent locaux.
+- Synchroniser avant de désinstaller ou de changer de téléphone. Le volume OVH et la synchronisation ne remplacent pas une sauvegarde indépendante. `infra/backup.sh` et les unités systemd sont fournis, mais l'installation du timer, l'exécution de sauvegardes et une restauration ne sont pas vérifiées. Le script vise `docker-compose.production.yml`, alors que le déploiement décrit utilise `docker-compose.ovh.yml` ; l'aligner avant toute activation.
+- Configuration mobile : version 1.0.3, `android.versionCode: 4`. Le dossier natif `apps/mobile/android` est ignoré par Git ; vérifier version native et keystore avant chaque build.
+- Résultats de validation, signature et empreinte APK : voir `docs/RELEASE_NOTES_v1.0.3.md`.

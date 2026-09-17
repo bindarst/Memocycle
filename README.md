@@ -16,11 +16,13 @@ sont détaillés dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Agenda & Calendrier** : Vues Agenda, Semaine et Mois avec prévision de charge (temps estimé et nombre de révisions).
 - **Tableau de Bord & Statistiques** : Section *À consolider*, suivi de la régularité (streaks sobres sans gamification excessive), taux de rétention moyen, diagnostics des matières fragiles et heatmap d'activité.
 - **Offline-First & Synchronisation Multi-Appareils** : Fonctionnement complet sans connexion Internet, outbox SQLite synchronisée avec PostgreSQL sans Firebase.
-- **Aide intégrée** : guide détaillé avec recherche, FAQ et dépannage accessibles hors ligne depuis Profil ; confidentialité et conditions sont également lisibles dans l’application avant ou après connexion.
+- **Aide intégrée** : guide détaillé avec recherche, FAQ et dépannage accessibles hors ligne depuis Profil.
 
-Les pages juridiques intégrées décrivent le fonctionnement actuel, mais leur
-identité d'éditeur, contact et mentions réglementaires restent à valider avant
-une publication publique (voir `docs/HANDOFF.md`).
+Les données d'étude sont enregistrées dans SQLite sur le téléphone et synchronisées
+avec la base PostgreSQL dédiée à MémoCycle sur OVH lorsque la connexion le permet.
+Le chrono en cours reste local. Google sert à l'identification, pas au stockage
+des cours. Le volume PostgreSQL du VPS n'est pas une sauvegarde indépendante :
+aucune sauvegarde OVH exécutée ou restaurée n'est vérifiée à ce jour.
 
 ## Prérequis
 
@@ -64,8 +66,8 @@ npx expo run:ios
 
 Ensuite : `npm run dev:mobile` à la racine.
 
-L'APK de production signé (version Android 1.0.2, code 3) est livré dans
-`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.2.apk`. Ouvrir ce fichier
+L'APK de production signé (version Android 1.0.3, code 4) est livré dans
+`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.3.apk`. Ouvrir ce fichier
 sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
 L'installation garde les données locales lorsque la signature d'origine est conservée.
 

@@ -9,8 +9,6 @@ import {
   PaintBoardIcon,
   AiPhone01Icon,
   Shield01Icon,
-  File01Icon,
-  SecurityCheckIcon,
   Logout01Icon,
   RefreshIcon,
   Calendar01Icon,
@@ -192,8 +190,7 @@ export default function Profile() {
         />
       </View>
 
-      {/* Section Légal */}
-      <SectionTitle title="Informations" />
+      <SectionTitle title="Aide" />
       <View style={{ gap: 6 }}>
         <ListRow
           icon={HelpCircleIcon}
@@ -201,18 +198,6 @@ export default function Profile() {
           subtitle="Guide complet, recherche et dépannage"
           showChevron
           onPress={() => router.push("/settings/help")}
-        />
-        <ListRow
-          icon={SecurityCheckIcon}
-          title="Politique de confidentialité"
-          showChevron
-          onPress={() => router.push("/legal/privacy")}
-        />
-        <ListRow
-          icon={File01Icon}
-          title="Conditions d’utilisation"
-          showChevron
-          onPress={() => router.push("/legal/terms")}
         />
       </View>
 

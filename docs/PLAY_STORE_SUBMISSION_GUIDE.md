@@ -98,8 +98,7 @@ Téléchargez MémoCycle aujourd'hui et libérez votre potentiel de mémorisatio
 
 ### 📄 URL de la politique de confidentialité (Privacy Policy)
 * Google exige une URL publique valide pour la politique de confidentialité.
-* Le modèle HTML est disponible dans le dépôt : [`infra/public/privacy.html`](file:///c:/Users/Adminpc/Desktop/Memocycle/infra/public/privacy.html).
-* Vous pouvez l'héberger sur votre serveur ou GitHub Pages (ex: `https://votre-domaine.com/privacy.html`).
+* Aucun modèle HTML n'est inclus dans cette version ; préparer une page définitive si une publication sur Google Play est envisagée.
 
 ---
 

@@ -42,7 +42,7 @@ const icons: Record<string, IconType> = {
   progress: Analytics01Icon,
   sync: RefreshIcon,
   reminders: Notification01Icon,
-  privacy: Shield01Icon,
+  account: Shield01Icon,
   trouble: HelpCircleIcon,
 };
 
@@ -210,14 +210,6 @@ export default function HelpScreen() {
         })
       )}
 
-      <Card style={{ gap: 10, marginTop: 6 }}>
-        <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: "700" }}>Tes données et tes droits</Text>
-        <Text style={{ color: c.textSecondary, fontSize: 13, lineHeight: 19 }}>
-          Consulte les documents intégrés à l’application, même hors ligne.
-        </Text>
-        <Button fullWidth size="sm" variant="secondary" title="Confidentialité" onPress={() => router.push("/legal/privacy")} />
-        <Button fullWidth size="sm" variant="secondary" title="Conditions d’utilisation" onPress={() => router.push("/legal/terms")} />
-      </Card>
     </Screen>
   );
 }
