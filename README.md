@@ -75,8 +75,11 @@ L'APK de production signé (version Android 1.0.5, code 6) est livré dans
 sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
 L'installation garde les données locales lorsque la signature d'origine est conservée.
 Le bundle signé pour Google Play est `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.aab`.
-La politique de confidentialité et la demande de suppression doivent être
-accessibles publiquement avant la soumission : voir [docs/PLAY_STORE_SUBMISSION_GUIDE.md](docs/PLAY_STORE_SUBMISSION_GUIDE.md).
+La [présentation de l'application](https://memocycle.135-125-100-75.sslip.io/v1/public),
+la [politique de confidentialité](https://memocycle.135-125-100-75.sslip.io/v1/public/privacy)
+et la [demande de suppression](https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account)
+sont accessibles publiquement. État de la soumission : voir
+[docs/PLAY_STORE_SUBMISSION_GUIDE.md](docs/PLAY_STORE_SUBMISSION_GUIDE.md).
 
 ## iPhone et Expo
 

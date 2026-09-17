@@ -11,6 +11,8 @@ const style = `<style>
   .muted{color:#536078}footer{margin-top:32px;font-size:.9rem;color:#536078}
 </style>`;
 
+const home = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MémoCycle · Réviser au bon moment</title>${style}</head><body><main><p class="brand">MémoCycle</p><h1>Réviser au bon moment</h1><div class="card"><p>MémoCycle aide les élèves et les adultes à organiser leurs matières, cours, fiches et examens. La répétition espacée propose les prochaines révisions selon ce que vous retenez ; l'agenda, le mode Focus et la courbe de rétention aident à suivre votre progression.</p><p>Les PDF joints restent sur votre téléphone. Les données d'étude textuelles peuvent se synchroniser avec votre compte pour retrouver vos révisions sur un autre appareil. L'application ne contient ni publicité ni achat intégré.</p><p><a href="/v1/public/privacy">Politique de confidentialité</a> · <a href="/v1/public/delete-account">Supprimer mon compte</a> · <a href="mailto:${support}">Contacter l'assistance</a></p></div><footer>Application MémoCycle · Bindarst</footer></main></body></html>`;
+
 const privacy = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Politique de confidentialité · MémoCycle</title>${style}</head><body><main><p class="brand">MémoCycle</p><h1>Politique de confidentialité</h1><p class="muted">Dernière mise à jour : 17 septembre 2026 · Éditeur : Bindarst</p><div class="card">
 <h2>Ce que MémoCycle utilise</h2><p>La connexion Google fournit un identifiant de compte, une adresse e-mail vérifiée et, si disponibles, un nom et une photo de profil. L'application enregistre aussi le fuseau horaire, un identifiant d'installation, la plateforme, la version et éventuellement le nom de l'appareil. Ces informations servent à créer le compte, sécuriser la connexion et gérer les appareils.</p>
 <p>Les matières, cours, fiches textuelles, dates d'examen, plannings, révisions et réglages saisis dans l'application sont enregistrés sur le téléphone puis synchronisés avec une base PostgreSQL dédiée à MémoCycle hébergée sur OVH. Cette synchronisation permet de retrouver les données sur un autre appareil et de poursuivre les révisions hors ligne. Les fichiers PDF joints restent dans le stockage privé du téléphone : ils ne sont pas transmis au serveur MémoCycle et ne se synchronisent pas.</p>
@@ -23,6 +25,11 @@ const deletion = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><me
 
 @Controller("public")
 export class PublicController {
+  @Get()
+  homePage(@Res() response: Response) {
+    response.type("html").send(home);
+  }
+
   @Get("privacy")
   privacyPage(@Res() response: Response) {
     response.type("html").send(privacy);

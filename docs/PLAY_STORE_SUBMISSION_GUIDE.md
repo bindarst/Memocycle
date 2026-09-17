@@ -29,8 +29,9 @@ Description complète proposée :
 
 ## Informations à déclarer
 
-- Politique de confidentialité prévue : `https://memocycle.135-125-100-75.sslip.io/v1/public/privacy`.
-- Demande de suppression du compte : `https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account`.
+- Politique de confidentialité déployée et vérifiée HTTPS 200 : `https://memocycle.135-125-100-75.sslip.io/v1/public/privacy`.
+- Demande de suppression du compte déployée et vérifiée HTTPS 200 : `https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account`.
+- Page de présentation OAuth préparée : `https://memocycle.135-125-100-75.sslip.io/v1/public` ; vérifier son déploiement HTTPS avant de la déclarer dans Google Cloud.
 - E-mail public de contact confirmé : `bindarst2011@gmail.com`.
 - Données traitées : adresse e-mail vérifiée, nom/photo de profil si disponibles, identifiant de compte, données d'études textuelles, dates d'examen, révisions, réglages, fuseau horaire et informations techniques de l'appareil. Les PDF ne sont ni téléversés ni synchronisés.
 - Les données du compte transitent par HTTPS et sont stockées sur la base dédiée MémoCycle chez OVH ; Google sert à l'identification. Aucun SDK publicitaire ou d'analyse d'audience n'est intégré. Une suppression de compte est disponible dans l'application et par demande Web.
@@ -38,10 +39,10 @@ Description complète proposée :
 
 ## Points de publication à terminer
 
-1. Déployer l'API avec les pages publiques ci-dessus et vérifier leurs réponses HTTPS 200 depuis l'extérieur.
-2. Créer la fiche MémoCycle, puis choisir pour **Play App Signing** la **clé de signature d'application existante**. Si Google génère une autre clé, les installations directes de l'APK MémoCycle ne pourront pas être mises à jour par Play sans désinstallation ; leurs PDF locaux seraient alors perdus. Garder la clé privée hors Git.
-3. Faire au moins deux **vraies captures d'écran** de l'application sur Android. Aucun téléphone ADB ou émulateur configuré n'était disponible lors de la préparation du bundle ; ne pas présenter de maquette comme capture d'écran réelle.
-4. Compléter les questionnaires de contenu, la sécurité des données, l'accès des examinateurs (connexion Google requise), le classement par âge, la publicité, les coordonnées et les pays de diffusion. Les déclarations doivent correspondre au comportement effectivement vérifié de l'application.
+1. Créer la fiche MémoCycle, puis choisir pour **Play App Signing** la **clé de signature d'application existante**. Si Google génère une autre clé, les installations directes de l'APK MémoCycle ne pourront pas être mises à jour par Play sans désinstallation ; leurs PDF locaux seraient alors perdus. Garder la clé privée hors Git.
+2. Faire au moins deux **vraies captures d'écran** de l'application sur Android. Aucun téléphone ADB ou émulateur configuré n'était disponible lors de la préparation du bundle ; ne pas présenter de maquette comme capture d'écran réelle.
+3. Compléter les questionnaires de contenu, la sécurité des données, l'accès des examinateurs (connexion Google requise), le classement par âge, la publicité, les coordonnées et les pays de diffusion. Les déclarations doivent correspondre au comportement effectivement vérifié de l'application.
+4. Terminer le branding et la mise en production du projet Google OAuth `memocycle`. Il est actuellement en mode **Test** avec uniquement `bindarst2011@gmail.com` dans la liste des testeurs ; la page Branding demande notamment une page d'accueil, une politique de confidentialité et un domaine autorisé. Aucun niveau d'accès sensible ou restreint n'est configuré. Vérifier les exigences de propriété du domaine avant de compter sur l'URL provisoire `sslip.io` ; les comptes Google externes ne sont pas encore validés par un test sur téléphone.
 5. Si Play Console impose à ce compte personnel les règles des nouveaux comptes, organiser un test fermé avec au moins 12 testeurs inscrits pendant 14 jours avant l'accès à la production. La console affiche le statut réel du compte.
 
 La publication n'est terminée que lorsque Play Console affiche une version approuvée et disponible dans le canal voulu. Un AAB construit localement ne suffit pas.
