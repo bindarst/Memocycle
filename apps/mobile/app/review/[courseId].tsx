@@ -78,6 +78,7 @@ export default function Review() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [done, setDone] = useState(false);
   const [globalRating, setGlobalRating] = useState<ReviewRating>("good");
+  const [selectedMethod, setSelectedMethod] = useState<StudyMethod | null>(null);
 
   if (!rawCourse || !rawPlan) {
     return (
@@ -101,7 +102,7 @@ export default function Review() {
   const moduleItem = modules.find((m) => m.id === course.moduleId);
 
   const recommendation = recommendStudyMethod(course, plan);
-  const [selectedMethod, setSelectedMethod] = useState<StudyMethod>(recommendation.method);
+  const activeMethod = selectedMethod ?? recommendation.method;
 
   const currentItem: StudyItem | undefined = allItems[currentIndex];
   const totalItems = allItems.length;
@@ -142,7 +143,7 @@ export default function Review() {
             desiredRetention: plan.desiredRetention,
             durationSeconds,
             sessionType: mode === "voluntary" ? "voluntary_review" : "scheduled_review",
-            studyMethod: selectedMethod,
+            studyMethod: activeMethod,
           },
         );
         setDone(true);
@@ -234,6 +235,9 @@ export default function Review() {
             Méthode :
           </Text>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Méthode ${STUDY_METHOD_LABELS[activeMethod]}. Changer de méthode`}
+            style={styles.methodPicker}
             onPress={() => {
               const allMethods: StudyMethod[] = [
                 "free_recall",
@@ -244,12 +248,12 @@ export default function Review() {
                 "worked_example",
                 "passive_reading",
               ];
-              const nextIdx = (allMethods.indexOf(selectedMethod) + 1) % allMethods.length;
+              const nextIdx = (allMethods.indexOf(activeMethod) + 1) % allMethods.length;
               setSelectedMethod(allMethods[nextIdx]!);
             }}
           >
             <Pill tone="primary">
-              {`${STUDY_METHOD_LABELS[selectedMethod]}${selectedMethod === recommendation.method ? " · Recommandé" : ""}`}
+              {`${STUDY_METHOD_LABELS[activeMethod]}${activeMethod === recommendation.method ? " · Recommandé" : ""}`}
             </Pill>
           </Pressable>
         </View>
@@ -325,9 +329,7 @@ export default function Review() {
         <View style={{ gap: 12 }}>
           {/* Progression */}
           <View style={styles.progressHeader}>
-            <Text style={[styles.progressCount, { color: c.textSecondary }]}>
-              {currentIndex + 1} / {totalItems}
-            </Text>
+            <Text style={[styles.progressCount, { color: c.textPrimary }]}>Fiche {currentIndex + 1} sur {totalItems}</Text>
             <Pill tone="primary">{currentItem.type}</Pill>
           </View>
           <View style={[styles.progressBar, { backgroundColor: c.border }]}>
@@ -402,6 +404,9 @@ export default function Review() {
           {/* Evaluation */}
           {showAnswer && (
             <View style={{ gap: 6, marginTop: 4 }}>
+              <Text style={{ fontSize: 13, color: c.textSecondary }}>
+                Quelle facilité as-tu eue à retrouver la réponse ?
+              </Text>
               {renderRatingButtons(handleRateItem, a.busy)}
             </View>
           )}
@@ -410,6 +415,9 @@ export default function Review() {
         /* Cas sans items */
         <Card style={{ gap: 12 }}>
           <Label large>Auto-évaluation</Label>
+          <Text style={{ color: c.textSecondary, fontSize: 14, lineHeight: 20 }}>
+            Sans fiche pour ce cours, évalue ce que tu peux retrouver de mémoire.
+          </Text>
           {renderRatingButtons((rating) => {
             setGlobalRating(rating);
             if (
@@ -445,6 +453,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   progressCount: { fontSize: 13, fontWeight: "600" },
+  methodPicker: { minHeight: 44, justifyContent: "center" },
   progressBar: { height: 4, borderRadius: 4, overflow: "hidden" },
   flashcard: { minHeight: 180, gap: 12, padding: 16 },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -483,4 +492,3 @@ const styles = StyleSheet.create({
   breakdownVal: { fontSize: 18, fontWeight: "700" },
   breakdownLabel: { fontSize: 11, fontWeight: "500" },
 });
-

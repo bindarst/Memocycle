@@ -1,6 +1,6 @@
 # Reprise du projet MémoCycle
 
-Dernière mise à jour : 16 septembre 2026.
+Dernière mise à jour : 17 septembre 2026.
 
 Ce document est la source de vérité pour reprendre le projet. Ne jamais ajouter
 de mot de passe, de secret JWT, de fichier `.env`, de clé privée ou de keystore
@@ -32,7 +32,10 @@ livraison ou d'infrastructure.
    - Équilibrage de charge (`workloadBalancer.ts`) avec détection de surcharges et redistribution automatique sécurisée.
 
 4. **Sessions Guidées & Focus** :
-   - Écran `/session/[courseId]` intégrant minuteur Pomodoro (25 min par défaut), rappel actif et notation finale.
+   - Écran `/session/[courseId]` intégrant minuteur Focus ou chrono libre, rappel actif et notation finale.
+   - Le chrono est stocké localement dans `study_timers` (migration SQLite v5), isolé par utilisateur et cours. Un horodatage de départ permet de retrouver le temps exact après navigation, veille ou redémarrage. La fin de session efface le chrono, la déconnexion avec effacement du compte aussi.
+   - `/review/[courseId]` n'appelle plus de hook conditionnel au chargement : le bouton « Réviser » n'entraîne plus l'erreur React liée à l'ordre des hooks.
+   - La validation d'une session utilise `start`, `complete` ou `restart` selon l'état du planning, évitant un accès à un planning absent.
 
 5. **Expérience Produit Enrichie** :
    - Tableau de bord *Aujourd'hui* avec section *À consolider*, progression, streak sobre et actions rapides.
@@ -64,4 +67,12 @@ npm run lint
 npm test
 ```
 
-Toutes les suites de vérification sont au vert (0 erreur TypeScript, 0 erreur ESLint, 31/31 tests passants).
+Vérifications du 17 septembre : 0 erreur TypeScript, 0 erreur ESLint, 60/60 tests passants (dont horloge après fermeture et persistance SQLite).
+
+## Livrable Android 1.0.1
+
+- `apps/mobile/app.config.ts` : version 1.0.1, `android.versionCode: 2`. Garder le même keystore de production pour les mises à jour.
+- Le dossier natif `apps/mobile/android` est ignoré par Git. Après un nouveau `expo prebuild`, vérifier le numéro de version et la signature avant de reconstruire.
+- APK signé : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.1.apk` (copie également dans `app-release.apk` pour la continuité des anciens liens OneDrive).
+- APK vérifié avec `aapt`/`apksigner` : package `app.memocycle.mobile`, versionCode 2, versionName 1.0.1 ; signature de production inchangée. SHA-256 : `39AF35C0E65DE7283622E961255BF153907D4E6E29A029C06B5635B31A776E80`, identique dans OneDrive.
+- Le test manuel sur un téléphone requiert un appareil ADB connecté ; aucun appareil n'était visible lors de cette intervention. Faire un essai « Réviser », puis démarrer un chrono, quitter l'application, attendre et rouvrir le même cours.

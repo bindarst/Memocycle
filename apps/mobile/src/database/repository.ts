@@ -162,6 +162,7 @@ export async function wipeUser(userId: string) {
       "server_shadow",
       "sync_conflicts",
       "daily_progress",
+      "study_timers",
     ])
       await tx.runAsync(`DELETE FROM ${table} WHERE owner_user_id=?`, userId);
   });

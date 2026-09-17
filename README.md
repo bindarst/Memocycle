@@ -10,7 +10,7 @@ sont détaillés dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - **Moteur Mémoire Adaptatif (FSRS-6)** : Calcul dynamique et scientifique des intervalles de rappel basé sur la difficulté perçue, la stabilité mémoire et la rétention cible souhaitée (90 % par défaut). Rétro-compatibilité intégrale avec le cycle classique historique (6 étapes fixes).
 - **Rappel Actif & Unités d'Étude (`StudyItem`)** : Fiches de mémorisation (*flashcards*), questions ciblées, textes à trous et notes avec auto-évaluation en 4 niveaux (*Oublié*, *Difficile*, *Bien*, *Facile*).
-- **Sessions de Travail Guidées & Focus** : Minuteur d'étude avec mode Focus Pomodoro (25 min par défaut) et révision active.
+- **Sessions de Travail Guidées & Focus** : Minuteur d'étude Focus ou chrono libre, conservé par cours dans SQLite et recalculé depuis l'heure réelle même après fermeture de l'application, avec révision active.
 - **Planificateur Quotidien Intelligent** : Calcul des priorités combinant retard, probabilité d'oubli, importance du cours et planification à rebours avant les examens.
 - **Équilibrage de Charge** : Lissage automatique des révisions sur 14 jours évitant les surcharges sans compromettre la rétention ni déplacer les examens.
 - **Agenda & Calendrier** : Vues Agenda, Semaine et Mois avec prévision de charge (temps estimé et nombre de révisions).
@@ -58,6 +58,11 @@ npx expo run:ios
 ```
 
 Ensuite : `npm run dev:mobile` à la racine.
+
+L'APK de production signé (version Android 1.0.1, code 2) est livré dans
+`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.1.apk`. Ouvrir ce fichier
+sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
+L'installation garde les données locales lorsque la signature d'origine est conservée.
 
 ## Vérifications
 

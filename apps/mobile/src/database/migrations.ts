@@ -94,6 +94,18 @@ const migrations = [
     DELETE FROM study_sessions WHERE owner_user_id=OLD.owner_user_id AND course_id=OLD.id;
   END;
   `,
+  `
+  CREATE TABLE IF NOT EXISTS study_timers (
+    owner_user_id TEXT NOT NULL,
+    course_id TEXT NOT NULL,
+    mode TEXT NOT NULL CHECK(mode IN ('focus','chronometer')),
+    focus_minutes INTEGER NOT NULL,
+    elapsed_ms INTEGER NOT NULL,
+    running_since_ms INTEGER,
+    PRIMARY KEY(owner_user_id,course_id),
+    FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE
+  );
+  `,
 ];
 export async function migrate(db: SQLiteDatabase) {
   await db.withExclusiveTransactionAsync(async (tx) => {

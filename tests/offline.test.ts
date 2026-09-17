@@ -11,6 +11,8 @@ import { migrate } from "../apps/mobile/src/database/migrations";
 import { initialSchema } from "../apps/mobile/src/database/schema";
 import { save, all, find, wipeUser } from "../apps/mobile/src/database/repository";
 import { completeReview } from "../apps/mobile/src/review/reviewService";
+import { loadStudyTimer, saveStudyTimer } from "../apps/mobile/src/session/timerRepository";
+import { transitionTimer, timerSnapshot } from "../apps/mobile/src/session/studyTimer";
 import { subjectInput, courseInput } from "../packages/contracts/src";
 describe("real SQLite offline workflow", () => {
   let db: SqliteAdapter;
@@ -94,13 +96,25 @@ describe("real SQLite offline workflow", () => {
     expect(await all("reviewEvent", user)).toHaveLength(1);
   });
   it("isolates accounts and wipes only the selected account", async () => {
-    await seed();
+    const course = await seed();
+    await saveStudyTimer(user, course, transitionTimer(await loadStudyTimer(user, course), { type: "toggle" }, 1000));
     const other = randomUUID();
     await save("subject", other, subjectInput.parse({ title: "Autre compte" }));
     expect(await all("course", other)).toEqual([]);
     await wipeUser(user);
+    expect(await loadStudyTimer(user, course)).toMatchObject({ elapsedMs: 0, runningSinceMs: null });
     expect(await all("subject", user)).toEqual([]);
     expect(await all("subject", other)).toHaveLength(1);
+  });
+  it("restores a running timer from SQLite and measures real time after reopening", async () => {
+    const course = await seed();
+    const running = transitionTimer(await loadStudyTimer(user, course), { type: "toggle" }, 1000);
+    await saveStudyTimer(user, course, running);
+    const reopened = await loadStudyTimer(user, course);
+    expect(timerSnapshot(reopened, 91_000)).toMatchObject({ remainingSeconds: 1410, running: true });
+    const paused = transitionTimer(reopened, { type: "toggle" }, 91_000);
+    await saveStudyTimer(user, course, paused);
+    expect(timerSnapshot(await loadStudyTimer(user, course), 200_000).remainingSeconds).toBe(1410);
   });
   it("archives and restores a course locally without resetting its plan", async () => {
     const course = await seed();
@@ -170,7 +184,7 @@ describe("real SQLite offline workflow", () => {
     );
     await migrate(old as unknown as SQLiteDatabase);
     expect(await old.getFirstAsync("PRAGMA user_version")).toEqual({
-      user_version: 4,
+      user_version: 5,
     });
     expect(
       await old.getFirstAsync<{ data: string; needs_apply: number }>(
