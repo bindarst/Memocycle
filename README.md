@@ -14,14 +14,18 @@ sont détaillés dans [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Planificateur Quotidien Intelligent** : Calcul des priorités combinant retard, probabilité d'oubli, importance du cours et planification à rebours avant les examens.
 - **Équilibrage de Charge** : Lissage automatique des révisions sur 14 jours évitant les surcharges sans compromettre la rétention ni déplacer les examens.
 - **Agenda & Calendrier** : Vues Agenda, Semaine et Mois avec prévision de charge (temps estimé et nombre de révisions).
+- **Examens faciles à dater** : calendrier tactile, horaires rapides et modification de la date depuis la matière ou le module.
+- **PDF locaux** : documents ajoutés aux matières, cours ou fiches et conservés uniquement dans le stockage privé du téléphone (50 Mo maximum par PDF).
 - **Tableau de Bord & Statistiques** : Section *À consolider*, suivi de la régularité (streaks sobres sans gamification excessive), taux de rétention moyen, diagnostics des matières fragiles et heatmap d'activité.
 - **Offline-First & Synchronisation Multi-Appareils** : Fonctionnement complet sans connexion Internet, outbox SQLite synchronisée avec PostgreSQL sans Firebase.
 - **Aide intégrée** : guide détaillé avec recherche, FAQ et dépannage accessibles hors ligne depuis Profil.
 
 Les données d'étude sont enregistrées dans SQLite sur le téléphone et synchronisées
 avec la base PostgreSQL dédiée à MémoCycle sur OVH lorsque la connexion le permet.
-Le chrono en cours reste local. Google sert à l'identification, pas au stockage
-des cours. Le volume PostgreSQL du VPS n'est pas une sauvegarde indépendante :
+Les PDF joints ne sont pas envoyés à OVH ni transférés entre appareils ; ils sont
+effacés en cas de déconnexion ou de désinstallation. Le chrono en cours reste local.
+Google sert à l'identification, pas au stockage des cours. La sauvegarde automatique
+Android de l'application est désactivée. Le volume PostgreSQL du VPS n'est pas une sauvegarde indépendante :
 aucune sauvegarde OVH exécutée ou restaurée n'est vérifiée à ce jour.
 
 ## Prérequis
@@ -66,10 +70,27 @@ npx expo run:ios
 
 Ensuite : `npm run dev:mobile` à la racine.
 
-L'APK de production signé (version Android 1.0.3, code 4) est livré dans
-`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.3.apk`. Ouvrir ce fichier
+L'APK de production signé (version Android 1.0.5, code 6) est livré dans
+`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.apk`. Ouvrir ce fichier
 sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
 L'installation garde les données locales lorsque la signature d'origine est conservée.
+Le bundle signé pour Google Play est `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.aab`.
+La politique de confidentialité et la demande de suppression doivent être
+accessibles publiquement avant la soumission : voir [docs/PLAY_STORE_SUBMISSION_GUIDE.md](docs/PLAY_STORE_SUBMISSION_GUIDE.md).
+
+## iPhone et Expo
+
+Le projet EAS est lié à [@bindarst/memocycle](https://expo.dev/accounts/bindarst/projects/memocycle).
+Le bundle JavaScript iOS se compile, mais aucun fichier iPhone
+installable n'a été produit : EAS demande des certificats et un profil Apple pour
+la distribution interne. Le compte ne dispose pas actuellement d'un abonnement
+Apple Developer. Expo Go de l'App Store ne peut pas ouvrir ce projet SDK 57,
+qui utilise aussi des modules natifs supplémentaires. Une installation iPhone
+demande un compte Apple Developer pour EAS, ou un Mac avec Xcode pour un build
+local de développement. La connexion Google iOS nécessite encore un client OAuth
+iOS ; le bouton Google est masqué sur iOS tant qu'il manque. La connexion Apple
+et le comportement de sauvegarde iCloud des PDF restent à valider avant de
+promettre un usage iPhone complet.
 
 ## Vérifications
 

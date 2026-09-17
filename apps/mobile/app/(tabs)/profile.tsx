@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Image, View, Text } from "react-native";
+import { Image, Linking, View, Text } from "react-native";
 import Constants from "expo-constants";
 import {
   Analytics01Icon,
@@ -28,6 +28,7 @@ import {
 } from "../../src/ui/components";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { currentSession } from "../../src/auth/authService";
+import { privacyUrl } from "../../src/config/publicLinks";
 import { database } from "../../src/database/database";
 import { subscribe } from "../../src/database/repository";
 import { pendingCount } from "../../src/sync/outboxService";
@@ -198,6 +199,12 @@ export default function Profile() {
           subtitle="Guide complet, recherche et dépannage"
           showChevron
           onPress={() => router.push("/settings/help")}
+        />
+        <ListRow
+          icon={Shield01Icon}
+          title="Politique de confidentialité"
+          showChevron
+          onPress={() => void a.run(() => Linking.openURL(privacyUrl).then(() => undefined))}
         />
       </View>
 

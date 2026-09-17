@@ -51,6 +51,7 @@ import { displayDate, lateness } from "../../src/utils/dates";
 import { estimatePlanRetention } from "../../src/review/fsrsScheduler";
 import { radius } from "../../src/theme/tokens";
 import { MemoryCurve } from "../../src/ui/MemoryCurve";
+import { LocalPdfSection } from "../../src/ui/LocalPdfSection";
 
 export default function CourseDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -275,6 +276,8 @@ export default function CourseDetail() {
       {plan && <MemoryCurve plans={[plan]} now={Date.now()} />}
 
       {/* Learning Items */}
+      <LocalPdfSection parentType="course" parentId={id} />
+
       <View style={{ gap: 8 }}>
         <SectionTitle
           title={`Fiches (${courseItems.length})`}
@@ -332,6 +335,7 @@ export default function CourseDetail() {
                 Indice : {item.hint}
               </Text>
             )}
+            <LocalPdfSection parentType="studyItem" parentId={item.id} compact />
           </Card>
         ))}
       </View>

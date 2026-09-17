@@ -106,6 +106,19 @@ const migrations = [
     FOREIGN KEY(owner_user_id,course_id) REFERENCES courses(owner_user_id,id) ON DELETE CASCADE
   );
   `,
+  `
+  CREATE TABLE IF NOT EXISTS local_pdf_attachments (
+    id TEXT PRIMARY KEY,
+    owner_user_id TEXT NOT NULL,
+    parent_type TEXT NOT NULL CHECK(parent_type IN ('subject','course','studyItem')),
+    parent_id TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS local_pdf_parent
+    ON local_pdf_attachments(owner_user_id,parent_type,parent_id);
+  `,
 ];
 export async function migrate(db: SQLiteDatabase) {
   await db.withExclusiveTransactionAsync(async (tx) => {

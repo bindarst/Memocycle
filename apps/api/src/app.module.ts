@@ -15,6 +15,7 @@ import { AccountService } from "./account/account.service";
 import { AccountController } from "./account/account.controller";
 import { DevicesController } from "./devices/devices.controller";
 import { HealthController } from "./health/health.controller";
+import { PublicController } from "./public/public.controller";
 import { CalendarModule } from "./integrations/calendar/calendar.module";
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CalendarModule } from "./integrations/calendar/calendar.module";
     AccountController,
     DevicesController,
     HealthController,
+    PublicController,
   ],
 })
 export class AppModule {}

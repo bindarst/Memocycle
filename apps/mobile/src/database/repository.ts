@@ -8,6 +8,7 @@ import {
 import { database } from "./database";
 import { tables } from "./schema";
 import { newId } from "../utils/ids";
+import { clearUserLocalPdfs, removeLocalPdfsForParent, type PdfParentType } from "../pdf/localPdfs";
 const listeners = new Set<() => void>();
 export const subscribe = (f: () => void) => {
   listeners.add(f);
@@ -127,6 +128,26 @@ export async function save(
 }
 export async function remove(type: EntityType, id: string, userId: string) {
   const db = await database();
+  const pdfParents: Array<{ type: PdfParentType; id: string }> = [];
+  if (type === "subject") {
+    pdfParents.push({ type: "subject", id });
+    const courses = await db.getAllAsync<{ id: string }>(
+      "SELECT id FROM courses WHERE owner_user_id=? AND subject_id=?", userId, id,
+    );
+    for (const course of courses) pdfParents.push({ type: "course", id: course.id });
+    const items = await db.getAllAsync<{ id: string }>(
+      "SELECT si.id FROM study_items si JOIN courses c ON c.owner_user_id=si.owner_user_id AND c.id=si.course_id WHERE si.owner_user_id=? AND c.subject_id=?", userId, id,
+    );
+    for (const item of items) pdfParents.push({ type: "studyItem", id: item.id });
+  } else if (type === "course") {
+    pdfParents.push({ type: "course", id });
+    const items = await db.getAllAsync<{ id: string }>(
+      "SELECT id FROM study_items WHERE owner_user_id=? AND course_id=?", userId, id,
+    );
+    for (const item of items) pdfParents.push({ type: "studyItem", id: item.id });
+  } else if (type === "studyItem") {
+    pdfParents.push({ type: "studyItem", id });
+  }
   await db.withExclusiveTransactionAsync(async (tx) => {
     const e = await find(type, id, userId, tx);
     if (!e) return;
@@ -150,10 +171,13 @@ export async function remove(type: EntityType, id: string, userId: string) {
       payload: {},
     });
   });
+  for (const parent of pdfParents)
+    await removeLocalPdfsForParent(userId, parent.type, parent.id);
   changed();
 }
 export async function wipeUser(userId: string) {
   const db = await database();
+  await clearUserLocalPdfs(userId);
   await db.withExclusiveTransactionAsync(async (tx) => {
     for (const table of [
       ...Object.values(tables),
@@ -163,6 +187,7 @@ export async function wipeUser(userId: string) {
       "sync_conflicts",
       "daily_progress",
       "study_timers",
+      "local_pdf_attachments",
     ])
       await tx.runAsync(`DELETE FROM ${table} WHERE owner_user_id=?`, userId);
   });
