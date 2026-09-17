@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Image, Linking, View, Text } from "react-native";
+import { Image, View, Text } from "react-native";
 import Constants from "expo-constants";
 import {
   Analytics01Icon,
@@ -14,6 +14,7 @@ import {
   Logout01Icon,
   RefreshIcon,
   Calendar01Icon,
+  HelpCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { isDeviceCalendarConnected } from "../../src/calendar/localCalendarService";
 import {
@@ -41,7 +42,6 @@ export default function Profile() {
   const [conflicts, setConflicts] = useState(0);
   const [imageError, setImageError] = useState(false);
   const user = currentSession()?.user;
-  const legalUrl = process.env.EXPO_PUBLIC_LEGAL_URL ?? "https://memocycle.app";
 
   useEffect(() => {
     const load = () => {
@@ -196,16 +196,23 @@ export default function Profile() {
       <SectionTitle title="Informations" />
       <View style={{ gap: 6 }}>
         <ListRow
+          icon={HelpCircleIcon}
+          title="Aide et FAQ"
+          subtitle="Guide complet, recherche et dépannage"
+          showChevron
+          onPress={() => router.push("/settings/help")}
+        />
+        <ListRow
           icon={SecurityCheckIcon}
           title="Politique de confidentialité"
           showChevron
-          onPress={() => void Linking.openURL(`${legalUrl}/privacy`)}
+          onPress={() => router.push("/legal/privacy")}
         />
         <ListRow
           icon={File01Icon}
           title="Conditions d’utilisation"
           showChevron
-          onPress={() => void Linking.openURL(`${legalUrl}/terms`)}
+          onPress={() => router.push("/legal/terms")}
         />
       </View>
 
@@ -228,4 +235,3 @@ export default function Profile() {
     </Screen>
   );
 }
-

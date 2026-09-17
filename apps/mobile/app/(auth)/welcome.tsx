@@ -1,11 +1,11 @@
 import React from "react";
+import { router } from "expo-router";
 import {
   Image,
   Platform,
   StyleSheet,
   Text,
   View,
-  Linking,
   Pressable,
 } from "react-native";
 import { GoogleSignInButton } from "react-native-nitro-google-signin";
@@ -28,7 +28,6 @@ export default function Welcome() {
   const { signIn, error: authError } = useAuth();
   const c = usePalette();
   const a = useAction();
-  const legal = process.env.EXPO_PUBLIC_LEGAL_URL ?? "https://memocycle.app";
 
   return (
     <Screen>
@@ -97,7 +96,7 @@ export default function Welcome() {
           <Pressable
             accessibilityRole="link"
             accessibilityLabel="Confidentialité"
-            onPress={() => void Linking.openURL(`${legal}/privacy`)}
+            onPress={() => router.push("/legal/privacy")}
           >
             <Text style={[styles.legalLink, { color: c.textSecondary }]}>
               Confidentialité
@@ -107,7 +106,7 @@ export default function Welcome() {
           <Pressable
             accessibilityRole="link"
             accessibilityLabel="Conditions"
-            onPress={() => void Linking.openURL(`${legal}/terms`)}
+            onPress={() => router.push("/legal/terms")}
           >
             <Text style={[styles.legalLink, { color: c.textSecondary }]}>
               Conditions
@@ -139,4 +138,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-
