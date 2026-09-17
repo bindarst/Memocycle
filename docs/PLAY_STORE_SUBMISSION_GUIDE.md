@@ -31,11 +31,12 @@ Description complète proposée :
 
 - Politique de confidentialité déployée et vérifiée HTTPS 200 : `https://memocycle.135-125-100-75.sslip.io/v1/public/privacy`.
 - Demande de suppression du compte déployée et vérifiée HTTPS 200 : `https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account`.
-- Page de présentation OAuth préparée : `https://memocycle.135-125-100-75.sslip.io/v1/public` ; vérifier son déploiement HTTPS avant de la déclarer dans Google Cloud.
+- Page de présentation OAuth déployée et vérifiée HTTPS 200 : `https://memocycle.135-125-100-75.sslip.io/v1/public`.
 - E-mail public de contact confirmé : `bindarst2011@gmail.com`.
 - Données traitées : adresse e-mail vérifiée, nom/photo de profil si disponibles, identifiant de compte, données d'études textuelles, dates d'examen, révisions, réglages, fuseau horaire et informations techniques de l'appareil. Les PDF ne sont ni téléversés ni synchronisés.
 - Les données du compte transitent par HTTPS et sont stockées sur la base dédiée MémoCycle chez OVH ; Google sert à l'identification. Aucun SDK publicitaire ou d'analyse d'audience n'est intégré. Une suppression de compte est disponible dans l'application et par demande Web.
 - Déclarer ces traitements dans le questionnaire **Sécurité des données** de Play Console. Ne pas répondre « aucune donnée collectée » : la synchronisation OVH est active. Vérifier chaque catégorie et les pratiques des SDK avant validation finale.
+- Permissions relevées dans l'APK 1.0.5 : Internet/réseau, notifications, vibration, démarrage, biométrie et permissions de badges ; lecture/écriture de stockage externe limitées à Android 12 ou antérieur (`maxSdkVersion=32`). Pas de permission `SYSTEM_ALERT_WINDOW` ni de permission calendrier dans le manifeste final. Cette liste ne remplace pas l'audit des données réellement collectées par les SDK.
 
 ## Points de publication à terminer
 
