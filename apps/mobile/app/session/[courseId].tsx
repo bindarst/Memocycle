@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, AppState } from "react-native";
 import {
   PlayIcon,
   PauseIcon,
@@ -10,7 +10,7 @@ import {
   Layers01Icon,
 } from "@hugeicons/core-free-icons";
 import type { ReviewRating } from "@memocycle/contracts";
-import type { Course, StudyItem, Subject, Module } from "../../src/database/entities";
+import type { Course, StudyItem, Subject, Module, Plan } from "../../src/database/entities";
 import { newId } from "../../src/utils/ids";
 import {
   Screen,
@@ -29,6 +29,8 @@ import { useAuth } from "../../src/auth/AuthProvider";
 import { find, all } from "../../src/database/repository";
 import { completeReview } from "../../src/review/reviewService";
 import { radius } from "../../src/theme/tokens";
+import { timerSnapshot, transitionTimer, type StudyTimer, type TimerAction } from "../../src/session/studyTimer";
+import { loadStudyTimer, saveStudyTimer, clearStudyTimer } from "../../src/session/timerRepository";
 
 export default function StudySessionScreen() {
   const { courseId } = useLocalSearchParams<{ courseId: string }>();
@@ -42,20 +44,17 @@ export default function StudySessionScreen() {
   const [items, setItems] = useState<StudyItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Focus mode & timer state
-  const [isFocusMode, setIsFocusMode] = useState(true);
-  const [focusTargetMinutes, setFocusTargetMinutes] = useState(25);
-  const [secondsRemaining, setSecondsRemaining] = useState(25 * 60);
-  const [secondsElapsed, setSecondsElapsed] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+  const [timer, setTimer] = useState<StudyTimer | null>(null);
+  const [now, setNow] = useState(Date.now());
+  const [timerBusy, setTimerBusy] = useState(false);
+  const [timerError, setTimerError] = useState("");
+  const timerLocked = useRef(false);
 
   // Study items active index
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [ratings, setRatings] = useState<Record<string, ReviewRating>>({});
   const [sessionCompleted, setSessionCompleted] = useState(false);
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -77,7 +76,7 @@ export default function StudySessionScreen() {
 
         const allStudyItems = (await all("studyItem", userId)) as StudyItem[];
         const courseItems = allStudyItems
-          .filter((it) => it.courseId === courseId && !it.archivedAt)
+          .filter((it) => it.courseId === courseId && !it.archivedAt && !it.deletedAt)
           .sort((a, b) => a.position - b.position);
         if (active) setItems(courseItems);
       } catch (e) {
@@ -92,48 +91,52 @@ export default function StudySessionScreen() {
     };
   }, [courseId, userId]);
 
-  // Timer effect
   useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setSecondsElapsed((prev) => prev + 1);
-        if (isFocusMode) {
-          setSecondsRemaining((prev) => {
-            if (prev <= 1) {
-              setIsRunning(false);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }
-      }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
+    if (!userId || !courseId) return;
+    let active = true;
+    setTimer(null);
+    void loadStudyTimer(userId, courseId)
+      .then((saved) => { if (active) { setTimer(saved); setNow(Date.now()); } })
+      .catch(() => { if (active) setTimerError("Impossible de retrouver le chrono enregistré."); });
+    return () => { active = false; };
+  }, [courseId, userId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setNow(Date.now());
+    });
+    return () => { clearInterval(interval); subscription.remove(); };
+  }, []);
+
+  const snapshot = timer ? timerSnapshot(timer, now) : null;
+  const isFocusMode = timer?.mode === "focus";
+  const isRunning = snapshot?.running ?? false;
+  const focusTargetMinutes = timer?.focusMinutes ?? 25;
+
+  const changeTimer = async (change: TimerAction) => {
+    if (!timer || !userId || !courseId || timerLocked.current) return;
+    timerLocked.current = true;
+    setTimerBusy(true);
+    setTimerError("");
+    const timestamp = Date.now();
+    const next = transitionTimer(timer, change, timestamp);
+    try {
+      await saveStudyTimer(userId, courseId, next);
+      setTimer(next);
+      setNow(timestamp);
+    } catch {
+      setTimerError("Le chrono n’a pas pu être enregistré. Réessaie.");
+    } finally {
+      timerLocked.current = false;
+      setTimerBusy(false);
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning, isFocusMode]);
-
-  const handleStartPause = () => {
-    setIsRunning((prev) => !prev);
-  };
-
-  const handleResetTimer = () => {
-    setIsRunning(false);
-    setSecondsElapsed(0);
-    setSecondsRemaining(focusTargetMinutes * 60);
-  };
-
-  const handleChangeFocusDuration = (mins: number) => {
-    setFocusTargetMinutes(mins);
-    setSecondsRemaining(mins * 60);
-    setIsRunning(false);
   };
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
+    if (m >= 60) return `${Math.floor(m / 60).toString().padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
@@ -166,7 +169,16 @@ export default function StudySessionScreen() {
     if (!courseId) return;
     const sessionRating = calculateSessionRating();
     await action.run(async () => {
-      await completeReview(userId, courseId, "complete", newId(), sessionRating);
+      const plan = (await all("reviewPlan", userId)).find((p) => p.courseId === courseId) as Plan | undefined;
+      const command = !plan ? "start" : plan.status === "active" ? "complete" : "restart";
+      const elapsedMs = timer ? timerSnapshot(timer, Date.now()).elapsedMs : 0;
+      const durationSeconds = elapsedMs > 0 ? Math.max(1, Math.round(elapsedMs / 1000)) : undefined;
+      await completeReview(userId, courseId, command, newId(), {
+        rating: sessionRating,
+        durationSeconds,
+        sessionType: command === "complete" ? "scheduled_review" : "study",
+      });
+      try { await clearStudyTimer(userId, courseId); } catch (e) { console.error("Failed to clear completed timer:", e); }
       setSessionCompleted(true);
       setTimeout(() => {
         router.replace("/(tabs)/today");
@@ -174,7 +186,17 @@ export default function StudySessionScreen() {
     });
   };
 
-  if (loading || !course) {
+  if (!loading && (!course || (!timer && timerError))) {
+    return (
+      <Screen>
+        <IconButton icon={Cancel01Icon} accessibilityLabel="Retour" onPress={() => router.back()} />
+        <Label>{course ? "Chrono indisponible" : "Cours introuvable"}</Label>
+        <ErrorText message={timerError} />
+      </Screen>
+    );
+  }
+
+  if (loading || !course || !timer || !snapshot) {
     return (
       <Screen>
         <Label>Chargement...</Label>
@@ -194,7 +216,7 @@ export default function StudySessionScreen() {
           onPress={() => router.back()}
         />
         <Pill tone={isRunning ? "success" : "primary"}>
-          {isRunning ? "En cours" : "En pause"}
+          {isRunning ? "En cours" : snapshot.finished ? "Terminé" : "En pause"}
         </Pill>
       </View>
 
@@ -214,11 +236,11 @@ export default function StudySessionScreen() {
             {isFocusMode ? `FOCUS ${focusTargetMinutes} MIN` : "CHRONO"}
           </Text>
           <Pressable
-            onPress={() => {
-              setIsFocusMode(!isFocusMode);
-              setIsRunning(false);
-              setSecondsRemaining(focusTargetMinutes * 60);
-            }}
+            accessibilityRole="button"
+            accessibilityLabel={isFocusMode ? "Passer au chrono libre" : "Passer au mode Focus"}
+            disabled={timerBusy}
+            style={styles.modeButton}
+            onPress={() => void changeTimer({ type: "mode" })}
           >
             <Text style={[styles.modeToggle, { color: palette.primary }]}>
               {isFocusMode ? "Chrono libre" : "Mode Focus"}
@@ -227,15 +249,28 @@ export default function StudySessionScreen() {
         </View>
 
         <Text style={[styles.timerDisplay, { color: palette.textPrimary }]}>
-          {formatTime(isFocusMode ? secondsRemaining : secondsElapsed)}
+          {formatTime(isFocusMode ? snapshot.remainingSeconds : Math.floor(snapshot.elapsedMs / 1000))}
         </Text>
+
+        <Text style={[styles.timerCaption, { color: palette.textSecondary }]}>
+          {snapshot.finished ? "Session Focus terminée. Tu peux recommencer." : isRunning ? "Le temps continue même si tu quittes l’application." : "Ton temps est conservé quand tu quittes cette page."}
+        </Text>
+
+        {isFocusMode && (
+          <View style={[styles.timerTrack, { backgroundColor: palette.surfaceMuted }]}>
+            <View style={[styles.timerFill, { backgroundColor: palette.primary, width: `${snapshot.progress * 100}%` }]} />
+          </View>
+        )}
 
         {isFocusMode && !isRunning && (
           <View style={styles.durationSelector}>
             {[15, 25, 45, 60].map((mins) => (
               <Pressable
                 key={mins}
-                onPress={() => handleChangeFocusDuration(mins)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: focusTargetMinutes === mins }}
+                onPress={() => void changeTimer({ type: "duration", minutes: mins })}
+                disabled={timerBusy}
                 style={[
                   styles.durationButton,
                   {
@@ -261,19 +296,22 @@ export default function StudySessionScreen() {
         <View style={styles.timerControls}>
           <Button
             size="md"
-            title={isRunning ? "Pause" : "Démarrer"}
-            onPress={handleStartPause}
+            title={isRunning ? "Pause" : snapshot.finished ? "Recommencer" : "Démarrer"}
+            onPress={() => void changeTimer({ type: "toggle" })}
+            disabled={timerBusy}
             icon={isRunning ? PauseIcon : PlayIcon}
           />
           <Button
             size="md"
             variant="secondary"
             title="Réinitialiser"
-            onPress={handleResetTimer}
+            onPress={() => void changeTimer({ type: "reset" })}
+            disabled={timerBusy}
             icon={RotateCcwIcon}
           />
         </View>
       </Card>
+      <ErrorText message={timerError} />
 
       {/* Learning Items Section */}
       {items.length > 0 && currentItem ? (
@@ -415,7 +453,7 @@ export default function StudySessionScreen() {
           title={sessionCompleted ? "Révision enregistrée !" : "Valider la session"}
           onPress={() => void handleFinishAndSave()}
           icon={CheckmarkCircle01Icon}
-          disabled={sessionCompleted || action.busy}
+          disabled={sessionCompleted || action.busy || timerBusy}
         />
       </View>
 
@@ -451,12 +489,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  modeButton: { minHeight: 44, justifyContent: "center" },
   timerDisplay: {
     fontSize: 44,
     fontWeight: "700",
     letterSpacing: -1,
     fontVariant: ["tabular-nums"],
   },
+  timerCaption: { fontSize: 12, textAlign: "center", lineHeight: 18, paddingHorizontal: 8 },
+  timerTrack: { height: 6, width: "100%", borderRadius: 6, overflow: "hidden" },
+  timerFill: { height: "100%", borderRadius: 6 },
   durationSelector: {
     flexDirection: "row",
     gap: 6,
@@ -492,4 +534,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
