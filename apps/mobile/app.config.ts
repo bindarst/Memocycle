@@ -2,7 +2,7 @@ import type { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
   name: "MémoCycle",
   slug: "memocycle",
-  version: "1.0.1",
+  version: "1.0.2",
   scheme: "memocycle",
   icon: "./assets/icon.png",
   orientation: "portrait",
@@ -15,7 +15,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "app.memocycle.mobile",
-    versionCode: 2,
+    versionCode: 3,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#365CF5",

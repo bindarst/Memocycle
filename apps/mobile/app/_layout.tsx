@@ -53,6 +53,7 @@ function Gate() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="legal" />
       <Stack.Protected guard={!authenticated}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
