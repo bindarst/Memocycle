@@ -1,139 +1,47 @@
-# Guide Complet de Publication Google Play Store — MémoCycle
+# Publication Google Play — MémoCycle
 
-Ce document contient l'ensemble des éléments techniques, des textes officiels et des réponses aux questionnaires nécessaires pour soumettre **MémoCycle** sur le **Google Play Console**.
+État au 17 septembre 2026 : le compte personnel Play Console **Bindarst** est actif. Il contient la GMAO « Iso Care Maint » (`com.equaz.mobile`), qui doit rester intacte. MémoCycle doit être créé comme **nouvelle application** avec le package `app.memocycle.mobile`. Aucun déploiement Play MémoCycle n'est encore confirmé.
 
----
+## Fichiers prêts
 
-## 1. Ce que vous devez faire (Prérequis Compte Google)
+- App Bundle Google Play signé : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.aab` (83 873 406 octets ; SHA-256 `012315B97F87E18309669928C2E1DB659FE2E2BABD9DF4F5D1A47DAECC17F176`).
+- APK autonome : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.apk` (SHA-256 `10C62C655653AF28FD5E97C3DE89ADBBD3D96B0A4470A77AD4D463284EC727F4`). L'APK ne remplace pas l'AAB demandé par Play.
+- Package `app.memocycle.mobile`, version `1.0.5`, code `6`, cible API Android `36`. Certificat de signature historique SHA-1 `2E:58:2C:B8:35:27:1E:CA:47:91:05:7F:AE:AA:D2:71:11:0C:DC:25`, SHA-256 `88:76:D4:8F:54:D4:02:53:AE:D7:05:DC:79:5F:EF:B6:5C:80:08:45:D3:AF:85:5B:EC:75:30:41:DF:2F:AD:84`.
+- Icône et bannière : `store-assets/icon-512.png` (512 × 512) et `store-assets/feature-graphic.png` (1024 × 500).
 
-Google impose que certaines étapes soient effectuées directement par le titulaire du compte développeur :
+## Fiche en français
 
-1. **Créer un compte Google Play Console** :
-   - Rendez-vous sur [play.google.com/console](https://play.google.com/console/signup).
-   - Payez les frais uniques d'inscription Google (25 $ US).
-   - Validez votre identité (pièce d'identité ou vérification d'entreprise D-U-N-S si compte organisation).
+- Nom : **MémoCycle**.
+- Langue par défaut : **français (France)**.
+- Type : **application**, **sans frais**, catégorie **Éducation**.
+- Public visé confirmé : **13 ans et plus**. Diffusion initiale souhaitée : **pays francophones** ; sélectionner les pays réellement disponibles dans Play Console.
+- Description courte : `Révisions espacées, fiches et examens : apprends au bon moment.`
 
-2. **Créer une nouvelle application** :
-   - Cliquez sur **Créer une application**.
-   - Nom de l'application : `MémoCycle`
-   - Langue par défaut : `Français (France) – fr-FR`
-   - Type : `Application`
-   - Gratuit / Payant : `Gratuit`
-   - Déclarations : Accepter les conditions et déclarer l'application.
+Description complète proposée :
 
-3. **Déposer le fichier `.aab` (Android App Bundle)** :
-   - Google Play n'accepte plus les `.apk` bruts pour les nouvelles applications ; il exige un bundle `.aab`.
-   - Votre fichier est généré et prêt dans votre OneDrive :  
-     📁 `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle.aab`
+> MémoCycle t'aide à organiser tes cours et à réviser au bon moment. Crée des matières, des cours et des fiches, puis évalue ce que tu retiens après chaque révision. Le planning s'adapte à tes réponses grâce à la répétition espacée FSRS.
+>
+> Choisis les dates de tes examens dans un calendrier simple et visualise tes prochaines échéances. L'agenda t'aide à répartir le travail ; un mode Focus et un chronomètre gardent le temps de chaque séance, même si tu fermes l'application.
+>
+> Ajoute des PDF à tes matières, cours et fiches. Ces PDF restent sur ton téléphone et ne sont pas envoyés au serveur. Les données textuelles de tes études sont conservées localement et se synchronisent avec ton compte MémoCycle lorsque tu retrouves une connexion Internet.
+>
+> Consulte tes statistiques et la courbe de rétention pour repérer les notions à consolider. MémoCycle fonctionne aussi hors ligne après la première connexion. Aucune publicité ni achat intégré.
 
----
+## Informations à déclarer
 
-## 2. Fiche Google Play Store (Textes à Copier-Coller)
+- Politique de confidentialité prévue : `https://memocycle.135-125-100-75.sslip.io/v1/public/privacy`.
+- Demande de suppression du compte : `https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account`.
+- E-mail public de contact confirmé : `bindarst2011@gmail.com`.
+- Données traitées : adresse e-mail vérifiée, nom/photo de profil si disponibles, identifiant de compte, données d'études textuelles, dates d'examen, révisions, réglages, fuseau horaire et informations techniques de l'appareil. Les PDF ne sont ni téléversés ni synchronisés.
+- Les données du compte transitent par HTTPS et sont stockées sur la base dédiée MémoCycle chez OVH ; Google sert à l'identification. Aucun SDK publicitaire ou d'analyse d'audience n'est intégré. Une suppression de compte est disponible dans l'application et par demande Web.
+- Déclarer ces traitements dans le questionnaire **Sécurité des données** de Play Console. Ne pas répondre « aucune donnée collectée » : la synchronisation OVH est active. Vérifier chaque catégorie et les pratiques des SDK avant validation finale.
 
-### 🏷️ Titre de l'application (max 30 caractères)
-```text
-MémoCycle : Études & Révisions
-```
+## Points de publication à terminer
 
-### 📝 Description courte (max 80 caractères)
-```text
-Révisez intelligemment avec la répétition espacée FSRS et le rappel actif.
-```
+1. Déployer l'API avec les pages publiques ci-dessus et vérifier leurs réponses HTTPS 200 depuis l'extérieur.
+2. Créer la fiche MémoCycle, puis choisir pour **Play App Signing** la **clé de signature d'application existante**. Si Google génère une autre clé, les installations directes de l'APK MémoCycle ne pourront pas être mises à jour par Play sans désinstallation ; leurs PDF locaux seraient alors perdus. Garder la clé privée hors Git.
+3. Faire au moins deux **vraies captures d'écran** de l'application sur Android. Aucun téléphone ADB ou émulateur configuré n'était disponible lors de la préparation du bundle ; ne pas présenter de maquette comme capture d'écran réelle.
+4. Compléter les questionnaires de contenu, la sécurité des données, l'accès des examinateurs (connexion Google requise), le classement par âge, la publicité, les coordonnées et les pays de diffusion. Les déclarations doivent correspondre au comportement effectivement vérifié de l'application.
+5. Si Play Console impose à ce compte personnel les règles des nouveaux comptes, organiser un test fermé avec au moins 12 testeurs inscrits pendant 14 jours avant l'accès à la production. La console affiche le statut réel du compte.
 
-### 📖 Description complète (max 4000 caractères)
-```text
-MémoCycle est votre assistant personnel d'apprentissage et de mémorisation à long terme, conçu pour les étudiants, lycéens, candidats aux concours (médecine, droit, prépa, grandes écoles) et autodidactes.
-
-Ne perdez plus votre temps à relire passivement vos cours. Grâce à son algorithme prédictif adaptatif FSRS (Free Spaced Repetition Scheduler) et à la méthode du rappel actif, MémoCycle planifie vos révisions au moment mathématiquement optimal : juste avant que vous n'oubliiez.
-
-🚀 POURQUOI CHOISIR MÉMOCYCLE ?
-
-🧠 Moteur Mémoire Adaptatif FSRS
-Chaque notion a sa propre stabilité et difficulté. MémoCycle calcule l'intervalle idéal de répétition en fonction de vos auto-évaluations précises (Oublié, Difficile, Bien, Facile). Mémorisez plus en révisant moins.
-
-🎯 Planification Intelligente par Objectif d'Examen
-Renseignez vos dates d'échéances et examens. Le planificateur intelligent rétro-calcule votre charge de travail quotidienne et équilibre automatiquement vos sessions pour éviter le bachotage de dernière minute.
-
-⚡ Rappel Actif & Flashcards Interactives
-Transformez vos cours en fiches de révision, textes à trous (cloze) et questions/réponses. Testez votre mémoire activement pour un ancrage synaptique profond et durable.
-
-⏱️ Mode Focus & Chronomètre Pomodoro
-Lancez des sessions d'étude guidées de 15, 25, 45 ou 60 minutes. Restez concentré sans distraction avec un retour direct sur votre niveau de rétention.
-
-📊 Statistiques et Courbe de l'Oubli
-Visualisez en temps réel votre courbe de rétention, vos matières à consolider, votre historique d'effort et votre régularité d'étude sans stress inutile.
-
-🌐 100% Hors-Ligne & Synchronisation Multi-Appareils
-Révisez dans les transports ou sans connexion Internet : tout fonctionne en local sur votre téléphone. Dès que vous retrouvez le réseau, vos données se synchronisent de manière fluide et chiffrée.
-
-🔒 Respect Total de la Vie Privée
-Vos données d'apprentissage vous appartiennent. Aucune publicité, aucun pistage tiers, aucun revendeur de données.
-
----
-Téléchargez MémoCycle aujourd'hui et libérez votre potentiel de mémorisation !
-```
-
----
-
-## 3. Réponses aux Questionnaires Obligatoires de la Console
-
-### 🛡️ Sécurité des données (Data Safety)
-* **L'application collecte-t-elle des données ?** : Oui (si synchronisation activée).
-* **Quelles données sont collectées ?** :
-  * *Informations personnelles* : Adresse e-mail (uniquement pour l'authentification/compte).
-  * *Activité sur l'application* : Données de cours, fiches de révision et dates d'évaluation (pour la synchronisation du planning d'étude).
-* **Les données sont-elles partagées avec des tiers ?** : **Non** (aucun partage avec des tiers, aucun réseau publicitaire).
-* **Chiffrement des données en transit** : **Oui** (toutes les connexions utilisent le protocole HTTPS/TLS).
-* **Suppression du compte et des données** : **Oui** (l'utilisateur peut supprimer son compte et l'intégralité de ses données directement depuis l'application dans *Paramètres > Compte* ou via la page web dédiée).
-
-### 🔞 Classification du contenu (IARC)
-* **Catégorie** : Référence / Éducation / Utilitaires.
-* **Violence, sexualité, langage grossier, drogues, jeux d'argent** : **Non** à toutes les questions.
-* **Résultat attendu** : PEGI 3 / Tous publics (Everyone).
-
-### 🎯 Public cible et contenu
-* **Tranches d'âge cibles** : 13-15 ans, 16-17 ans, 18 ans et plus.
-* **L'application est-elle destinée involontairement aux jeunes enfants ?** : Non.
-* **Présence de publicités** : Déclarer **"Non, mon application ne contient pas d'annonces"**.
-
-### 📄 URL de la politique de confidentialité (Privacy Policy)
-* Google exige une URL publique valide pour la politique de confidentialité.
-* Aucun modèle HTML n'est inclus dans cette version ; préparer une page définitive si une publication sur Google Play est envisagée.
-
----
-
-## 4. Spécifications des Éléments Graphiques du Store
-
-Pour publier la fiche, Google Play vous demandera d'uploader 3 types de visuels :
-
-1. **Icône de l'application** :
-   - Format : PNG 32 bits (avec canal alpha)
-   - Dimensions : `512 x 512 px`
-   - Taille max : 1 Mo
-   - *Fichier source disponible dans :* `apps/mobile/assets/icon.png`
-
-2. **Graphique de fonctionnalité (Bannière promotionnelle en haut de fiche)** :
-   - Format : JPEG ou PNG 24 bits (sans transparence)
-   - Dimensions : `1024 x 500 px`
-   - Taille max : 1 Mo
-
-3. **Captures d'écran de l'application (Screenshots)** :
-   - Minimum 2 captures (recommandé : 4 à 6).
-   - Format : 16:9 ou 9:16 (ex: `1080 x 2400 px` ou `1080 x 1920 px`).
-   - Écrans recommandés à capturer :
-     1. Écran *Aujourd'hui* (Tableau de bord de révision & Courbe de l'oubli).
-     2. Écran *Session de Révision* (Rappel actif, boutons Oublié / Bien / Facile).
-     3. Écran *Calendrier & Planification* (Agenda avec échéances d'examens).
-     4. Écran *Statistiques* (Métriques de rétention & Heatmap).
-
----
-
-## 5. Signature et Certificats
-
-* Le bundle `.aab` est signé avec votre keystore de production :
-  - Keystore : `credentials/android/memocycle-release.jks`
-  - Alias : `memocycle`
-  - Package ID : `app.memocycle.mobile`
-  - Version Code : `1`
-  - Version Name : `1.0.0`
-* Vous pouvez activer **Google Play App Signing** dans la console lors de votre premier upload (Google sécurisera votre clé de diffusion).
+La publication n'est terminée que lorsque Play Console affiche une version approuvée et disponible dans le canal voulu. Un AAB construit localement ne suffit pas.

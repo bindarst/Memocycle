@@ -15,6 +15,9 @@ apps/mobile/ios/
 *.p8
 *.mobileprovision
 artifacts/*.apk
+artifacts/*.aab
+artifacts/*.tar
+artifacts/avd/
 credentials/
 infra/public/config.js
 audit-report.json

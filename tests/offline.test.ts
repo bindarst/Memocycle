@@ -7,11 +7,16 @@ vi.mock("../apps/mobile/src/database/database", () => ({
   database: async () => holder.db,
 }));
 vi.mock("expo-crypto", () => ({ randomUUID }));
+vi.mock("../apps/mobile/src/pdf/localPdfs", () => ({
+  clearUserLocalPdfs: async () => {},
+  removeLocalPdfsForParent: async () => {},
+}));
 import { migrate } from "../apps/mobile/src/database/migrations";
 import { initialSchema } from "../apps/mobile/src/database/schema";
 import { save, all, find, wipeUser } from "../apps/mobile/src/database/repository";
 import { completeReview } from "../apps/mobile/src/review/reviewService";
 import { loadStudyTimer, saveStudyTimer } from "../apps/mobile/src/session/timerRepository";
+import { pendingCount } from "../apps/mobile/src/sync/outboxService";
 import { transitionTimer, timerSnapshot } from "../apps/mobile/src/session/studyTimer";
 import { subjectInput, courseInput } from "../packages/contracts/src";
 describe("real SQLite offline workflow", () => {
@@ -36,6 +41,18 @@ describe("real SQLite offline workflow", () => {
     );
     return course;
   }
+  it("keeps PDF metadata local and out of the sync outbox", async () => {
+    const course = await seed();
+    const before = await pendingCount(user);
+    await db.runAsync(
+      "INSERT INTO local_pdf_attachments(id,owner_user_id,parent_type,parent_id,filename,size_bytes,created_at) VALUES(?,?,?,?,?,?,?)",
+      randomUUID(), user, "course", course, "cours.pdf", 1024, new Date().toISOString(),
+    );
+    expect(await pendingCount(user)).toBe(before);
+    expect((await db.getFirstAsync<{ n: number }>(
+      "SELECT COUNT(*) n FROM local_pdf_attachments WHERE owner_user_id=?", user,
+    ))?.n).toBe(1);
+  });
   it("creates, studies and completes offline with an idempotent double tap", async () => {
     const course = await seed();
     await completeReview(user, course, "start", randomUUID());
@@ -97,11 +114,18 @@ describe("real SQLite offline workflow", () => {
   });
   it("isolates accounts and wipes only the selected account", async () => {
     const course = await seed();
+    await db.runAsync(
+      "INSERT INTO local_pdf_attachments(id,owner_user_id,parent_type,parent_id,filename,size_bytes,created_at) VALUES(?,?,?,?,?,?,?)",
+      randomUUID(), user, "course", course, "local.pdf", 2048, new Date().toISOString(),
+    );
     await saveStudyTimer(user, course, transitionTimer(await loadStudyTimer(user, course), { type: "toggle" }, 1000));
     const other = randomUUID();
     await save("subject", other, subjectInput.parse({ title: "Autre compte" }));
     expect(await all("course", other)).toEqual([]);
     await wipeUser(user);
+    expect((await db.getFirstAsync<{ n: number }>(
+      "SELECT COUNT(*) n FROM local_pdf_attachments WHERE owner_user_id=?", user,
+    ))?.n).toBe(0);
     expect(await loadStudyTimer(user, course)).toMatchObject({ elapsedMs: 0, runningSinceMs: null });
     expect(await all("subject", user)).toEqual([]);
     expect(await all("subject", other)).toHaveLength(1);
@@ -184,7 +208,7 @@ describe("real SQLite offline workflow", () => {
     );
     await migrate(old as unknown as SQLiteDatabase);
     expect(await old.getFirstAsync("PRAGMA user_version")).toEqual({
-      user_version: 5,
+      user_version: 6,
     });
     expect(
       await old.getFirstAsync<{ data: string; needs_apply: number }>(

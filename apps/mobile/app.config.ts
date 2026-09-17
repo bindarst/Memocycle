@@ -2,8 +2,10 @@ import type { ExpoConfig } from "expo/config";
 const config: ExpoConfig = {
   name: "MémoCycle",
   slug: "memocycle",
-  version: "1.0.3",
+  owner: "bindarst",
+  version: "1.0.5",
   scheme: "memocycle",
+  extra: { eas: { projectId: "3390691f-af2b-4a28-b94d-c99a9910385d" } },
   icon: "./assets/icon.png",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
@@ -15,7 +17,9 @@ const config: ExpoConfig = {
   },
   android: {
     package: "app.memocycle.mobile",
-    versionCode: 4,
+    versionCode: 6,
+    allowBackup: false,
+    blockedPermissions: ["android.permission.SYSTEM_ALERT_WINDOW"],
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#365CF5",

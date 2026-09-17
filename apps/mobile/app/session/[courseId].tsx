@@ -25,6 +25,7 @@ import {
   usePalette,
 } from "../../src/ui/components";
 import { AppIcon } from "../../src/ui/Icon";
+import { LocalPdfSection } from "../../src/ui/LocalPdfSection";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { find, all } from "../../src/database/repository";
 import { completeReview } from "../../src/review/reviewService";
@@ -378,6 +379,8 @@ export default function StudySessionScreen() {
                 />
               )
             )}
+
+            {showAnswer && <LocalPdfSection parentType="studyItem" parentId={currentItem.id} compact readOnly />}
 
             {/* Rating Buttons */}
             {showAnswer && (

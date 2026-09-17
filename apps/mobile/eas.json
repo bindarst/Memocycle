@@ -2,8 +2,22 @@
   "cli": { "version": ">=16.0.0", "appVersionSource": "remote" },
   "build": {
     "development": { "developmentClient": true, "distribution": "internal" },
-    "preview": { "distribution": "internal" },
-    "production": { "autoIncrement": true }
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://memocycle.135-125-100-75.sslip.io",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "575543516415-qjfv5cn3hfsjg241n63edgtp1rhjqmar.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "575543516415-aaie2tg4vtqbshlf4r8k5vc98ngb181d.apps.googleusercontent.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://memocycle.135-125-100-75.sslip.io",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "575543516415-qjfv5cn3hfsjg241n63edgtp1rhjqmar.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "575543516415-aaie2tg4vtqbshlf4r8k5vc98ngb181d.apps.googleusercontent.com"
+      }
+    }
   },
   "submit": { "production": {} }
 }

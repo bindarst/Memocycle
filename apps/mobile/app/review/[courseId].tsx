@@ -24,6 +24,7 @@ import {
   confirm,
 } from "../../src/ui/components";
 import { AppIcon } from "../../src/ui/Icon";
+import { LocalPdfSection } from "../../src/ui/LocalPdfSection";
 import {
   courseSchema,
   planSchema,
@@ -402,6 +403,7 @@ export default function Review() {
           </Card>
 
           {/* Evaluation */}
+          {showAnswer && <LocalPdfSection parentType="studyItem" parentId={currentItem.id} compact readOnly />}
           {showAnswer && (
             <View style={{ gap: 6, marginTop: 4 }}>
               <Text style={{ fontSize: 13, color: c.textSecondary }}>

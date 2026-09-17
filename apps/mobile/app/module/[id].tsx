@@ -135,7 +135,7 @@ export default function Module() {
                 paddingHorizontal: 12,
               }}
             >
-              <View style={{ gap: 2 }}>
+              <View style={{ gap: 2, flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: c.textPrimary }}>
                   {String(exam.title)}
                 </Text>
@@ -143,17 +143,20 @@ export default function Module() {
                   {displayDate(String(exam.examAt))}
                 </Text>
               </View>
-              <IconButton
-                icon={Delete02Icon}
-                accessibilityLabel="Supprimer examen"
-                onPress={() =>
-                  confirm(
-                    "Supprimer cette date d’examen ?",
-                    "Elle disparaîtra du calendrier.",
-                    () => void action.run(() => remove("exam", exam.id, userId)),
-                  )
-                }
-              />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <EntityForm kind="exam" entityId={exam.id} triggerTitle="Modifier" triggerVariant="ghost" />
+                <IconButton
+                  icon={Delete02Icon}
+                  accessibilityLabel="Supprimer examen"
+                  onPress={() =>
+                    confirm(
+                      "Supprimer cette date d’examen ?",
+                      "Elle disparaîtra du calendrier.",
+                      () => void action.run(() => remove("exam", exam.id, userId)),
+                    )
+                  }
+                />
+              </View>
             </Card>
           ))}
         </View>
@@ -186,4 +189,3 @@ export default function Module() {
     </Screen>
   );
 }
-

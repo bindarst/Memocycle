@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Image,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import * as Apple from "expo-apple-authentication";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { signInWithGoogle } from "../../src/auth/googleAuthService";
 import { signInWithApple } from "../../src/auth/appleAuthService";
+import { privacyUrl } from "../../src/config/publicLinks";
 import {
   Screen,
   ErrorText,
@@ -56,20 +58,22 @@ export default function Welcome() {
         </View>
 
         <View style={{ gap: 12 }}>
-          <GoogleSignInButton
-            size="wide"
-            colorScheme="light"
-            signInBehavior="none"
-            accessibilityLabel="Continuer avec Google"
-            disabled={a.busy}
-            onPress={() =>
-              a.run(async () => {
-                const r = await signInWithGoogle();
-                if (r.status === "success")
-                  await signIn("google", { idToken: r.idToken });
-              })
-            }
-          />
+          {(Platform.OS !== "ios" || !!process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID) && (
+            <GoogleSignInButton
+              size="wide"
+              colorScheme="light"
+              signInBehavior="none"
+              accessibilityLabel="Continuer avec Google"
+              disabled={a.busy}
+              onPress={() =>
+                a.run(async () => {
+                  const r = await signInWithGoogle();
+                  if (r.status === "success")
+                    await signIn("google", { idToken: r.idToken });
+                })
+              }
+            />
+          )}
 
           {Platform.OS === "ios" && (
             <Apple.AppleAuthenticationButton
@@ -89,6 +93,14 @@ export default function Welcome() {
         </View>
 
         <ErrorText message={a.error || authError} />
+
+        <Text
+          accessibilityRole="link"
+          onPress={() => void a.run(() => Linking.openURL(privacyUrl).then(() => undefined))}
+          style={{ color: c.textSecondary, fontSize: 13, textAlign: "center", textDecorationLine: "underline" }}
+        >
+          Politique de confidentialité
+        </Text>
 
       </View>
     </Screen>

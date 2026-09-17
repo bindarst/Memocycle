@@ -24,6 +24,8 @@ import {
   usePalette,
 } from "./components";
 import { AppIcon } from "./Icon";
+import { ExamDatePicker } from "./ExamDatePicker";
+import { examTimestamp } from "../utils/examDate";
 
 const ICONS = [
   { key: "book", label: "Livre", icon: Book01Icon },
@@ -62,7 +64,8 @@ export function EntityForm({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+  const [examDay, setExamDay] = useState(() => new Date());
+  const [examTime, setExamTime] = useState("09:00");
   const [iconKey, setIconKey] = useState("book");
   const [colorKey, setColorKey] = useState("blue");
   const a = useAction();
@@ -83,11 +86,12 @@ export function EntityForm({
         (kind === "exam" ? existing?.notes : existing?.description) ?? "",
       ),
     );
-    setDate(
-      existing?.examAt
-        ? format(new Date(String(existing.examAt)), "yyyy-MM-dd HH:mm")
-        : "",
-    );
+    const initialExam = existing?.examAt
+      ? new Date(String(existing.examAt))
+      : new Date();
+    if (!existing?.examAt) initialExam.setDate(initialExam.getDate() + 1);
+    setExamDay(initialExam);
+    setExamTime(existing?.examAt ? format(initialExam, "HH:mm") : "09:00");
     setIconKey(String(existing?.iconKey ?? "book"));
     setColorKey(String(existing?.colorKey ?? "blue"));
     setOpen(true);
@@ -243,12 +247,7 @@ export function EntityForm({
           )}
 
           {kind === "exam" && (
-            <Field
-              label="Date et heure (AAAA-MM-JJ HH:mm)"
-              value={date}
-              onChangeText={setDate}
-              placeholder="2026-09-30 14:00"
-            />
+            <ExamDatePicker value={examDay} onChange={setExamDay} time={examTime} onTimeChange={setExamTime} />
           )}
 
           <ErrorText message={a.error} />
@@ -290,17 +289,12 @@ export function EntityForm({
                           archivedAt: existing?.archivedAt ?? null,
                         })
                       : (() => {
-                          const timestamp = Date.parse(date.replace(" ", "T"));
-                          if (!Number.isFinite(timestamp))
-                            throw new Error(
-                              "Entre une date valide au format AAAA-MM-JJ HH:mm.",
-                            );
                           return examInput.parse({
                             title,
                             subjectId: resolvedSubjectId,
                             moduleId: resolvedModuleId,
                             notes: description,
-                            examAt: new Date(timestamp).toISOString(),
+                            examAt: examTimestamp(examDay, examTime),
                           });
                         })();
                   const savedId = await save(kind, userId, input, entityId);
@@ -323,4 +317,3 @@ export function EntityForm({
     </>
   );
 }
-

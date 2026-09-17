@@ -10,21 +10,18 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { AccessTokenGuard } from "../../auth/guards/access-token.guard";
+import type { AuthenticatedRequest } from "../../auth/guards/access-token.guard";
 import { CalendarService, type RegisterConnectionDto } from "./calendar.service";
 import type { CalendarConnection, UnifiedCalendarEvent } from "@memocycle/contracts";
 
-interface AuthenticatedRequest extends Request {
-  user: { sub: string };
-}
-
-@Controller("v1/integrations/calendar")
+@Controller("integrations/calendar")
 @UseGuards(AccessTokenGuard)
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Get("connections")
   async listConnections(@Req() req: AuthenticatedRequest): Promise<CalendarConnection[]> {
-    return this.calendarService.listConnections(req.user.sub);
+    return this.calendarService.listConnections(req.auth.userId);
   }
 
   @Post("connections")
@@ -32,7 +29,7 @@ export class CalendarController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: RegisterConnectionDto,
   ): Promise<CalendarConnection> {
-    return this.calendarService.registerConnection(req.user.sub, dto);
+    return this.calendarService.registerConnection(req.auth.userId, dto);
   }
 
   @Delete("connections/:id")
@@ -42,7 +39,7 @@ export class CalendarController {
     @Query("keepEvents") keepEvents?: string,
   ): Promise<{ success: boolean }> {
     const shouldKeep = keepEvents === undefined ? true : keepEvents === "true";
-    await this.calendarService.disconnectConnection(req.user.sub, id, shouldKeep);
+    await this.calendarService.disconnectConnection(req.auth.userId, id, shouldKeep);
     return { success: true };
   }
 
@@ -55,6 +52,6 @@ export class CalendarController {
     const min = timeMin || new Date().toISOString();
     const max =
       timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    return this.calendarService.fetchExternalEvents(req.user.sub, min, max);
+    return this.calendarService.fetchExternalEvents(req.auth.userId, min, max);
   }
 }

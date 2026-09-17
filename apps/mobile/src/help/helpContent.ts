@@ -90,6 +90,13 @@ export const helpSections: HelpSection[] = [
         answer: "Les fiches permettent de tester le rappel actif plutôt que de relire passivement. Utilise une flashcard pour un recto et un verso, une question pour une réponse ciblée, un texte à trous pour retrouver un élément manquant ou une note pour garder une idée essentielle. Un indice peut aider sans montrer immédiatement la réponse.",
       },
       {
+        id: "organize-pdf",
+        question: "Comment ajouter un PDF à une matière, un cours ou une fiche ?",
+        answer: "Ouvre la matière ou le cours et touche Ajouter un PDF dans la section Documents PDF. Pour une fiche, crée-la d’abord puis utilise Ajouter un PDF sous cette fiche. Tu peux ouvrir ou retirer les documents depuis le même écran. Chaque PDF est copié dans le stockage privé de MémoCycle sur ce téléphone, avec une limite de 50 Mo. Il n’est pas envoyé à OVH et ne suit pas la synchronisation des cours.",
+        destination: "library",
+        actionLabel: "Ouvrir mes cours",
+      },
+      {
         id: "organize-no-cards",
         question: "Puis-je réviser sans créer de fiches ?",
         answer: "Oui. L’écran Réviser propose une auto-évaluation globale quand le cours n’a pas de fiche. Essaie d’abord de restituer le contenu de mémoire, puis choisis Oublié, Difficile, Bien ou Facile. Tu peux ajouter des fiches plus tard pour rendre cette évaluation plus précise.",
@@ -198,7 +205,7 @@ export const helpSections: HelpSection[] = [
       {
         id: "planning-exams",
         question: "Comment préparer un examen ?",
-        answer: "Ajoute l’examen à la matière ou au cours concerné et vérifie sa date. Les priorités tiennent compte de sa proximité et des cours à consolider. Utilise le calendrier pour réserver du temps de travail, sans attendre la veille pour toutes les révisions.",
+        answer: "Ajoute l’examen depuis la matière ou le module concerné. Touche la date pour ouvrir le calendrier, choisis un jour et une heure rapide, puis enregistre. Le bouton Modifier permet de corriger un examen existant. Les priorités tiennent compte de sa proximité et des cours à consolider.",
         destination: "calendar",
         actionLabel: "Voir le calendrier",
       },
@@ -270,7 +277,7 @@ export const helpSections: HelpSection[] = [
       {
         id: "sync-multiple",
         question: "Comment retrouver mes cours sur un autre téléphone ?",
-        answer: "Sur l’ancien appareil, connecte-toi à Internet et termine la synchronisation. Installe MémoCycle sur le nouvel appareil puis connecte-toi avec la même identité. Laisse la première synchronisation se terminer. Un chrono en cours reste local à son téléphone et n’est pas transféré entre appareils.",
+        answer: "Sur l’ancien appareil, connecte-toi à Internet et termine la synchronisation. Installe MémoCycle sur le nouvel appareil puis connecte-toi avec la même identité. Laisse la première synchronisation se terminer. Les PDF ajoutés dans MémoCycle et un chrono en cours restent sur l’ancien téléphone : ils ne sont pas transférés entre appareils.",
       },
       {
         id: "sync-conflict",
@@ -325,7 +332,7 @@ export const helpSections: HelpSection[] = [
       {
         id: "account-data",
         question: "Où sont sauvegardées mes données ?",
-        answer: "Tes matières, cours, fiches, révisions et réglages sont enregistrés dans une base SQLite sur ce téléphone. Dès que la synchronisation réussit, une copie se trouve dans la base PostgreSQL dédiée à MémoCycle sur le serveur OVH. Google sert à te connecter, pas à stocker tes cours. Le chrono en cours reste sur ce téléphone. Vérifie qu’il n’y a plus de modifications en attente avant de changer d’appareil : la synchronisation n’est pas une sauvegarde indépendante du serveur.",
+        answer: "Tes matières, cours, fiches, dates d’examen, révisions et réglages sont enregistrés dans SQLite sur ce téléphone et synchronisés avec la base PostgreSQL dédiée à MémoCycle sur OVH. Les PDF joints aux matières, cours et fiches restent uniquement dans l’application sur ce téléphone : ils ne sont jamais envoyés à l’API. Le chrono reste local lui aussi. Les PDF disparaissent si tu te déconnectes ou désinstalles l’application. Google sert à te connecter, pas à stocker tes cours.",
         destination: "account",
         actionLabel: "Compte et données",
       },
@@ -383,7 +390,7 @@ export const helpSections: HelpSection[] = [
       {
         id: "trouble-install",
         question: "Comment installer une mise à jour Android ?",
-        answer: "Ouvre l’APK MémoCycle reçu dans OneDrive ou depuis la source de téléchargement de confiance. Android peut demander d’autoriser l’installation depuis cette application de fichiers. Installe la mise à jour par-dessus la version précédente avec la même signature ; ne désinstalle pas l’ancienne application tant que tes modifications ne sont pas synchronisées. Expo et un câble USB ne sont pas nécessaires.",
+        answer: "Ouvre l’APK MémoCycle reçu dans OneDrive ou depuis la source de téléchargement de confiance. Android peut demander d’autoriser l’installation depuis cette application de fichiers. Installe la mise à jour par-dessus la version précédente avec la même signature. Ne désinstalle pas l’ancienne application : les PDF locaux seraient perdus, même si les cours et dates ont été synchronisés. Expo et un câble USB ne sont pas nécessaires.",
       },
       {
         id: "trouble-report",
