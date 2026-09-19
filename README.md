@@ -75,8 +75,9 @@ L'APK de production signé (version Android 1.0.5, code 6) est livré dans
 sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
 L'installation garde les données locales lorsque la signature d'origine est conservée.
 Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.6.apk` et
-`artifacts/Memocycle-v1.0.6.aab` (version Android 1.0.6, code 7). La version
-1.0.5 est actuellement publiée sur le canal de test interne Google Play. Le canal est
+`artifacts/Memocycle-v1.0.6.aab` (version Android 1.0.6, code 7), également
+copiés dans `C:\Users\Adminpc\OneDrive\Memocycle\`. La version 1.0.6 est
+publiée sur le canal de test interne Google Play. Le canal est
 actif pour `bindarst2011@gmail.com` et le lien d'inscription est
 https://play.google.com/apps/internaltest/4701281405599427540. La mise en
 production reste soumise au test fermé obligatoire de 12 testeurs pendant

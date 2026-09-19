@@ -8,4 +8,6 @@ Android passe à `versionName 1.0.6` et `versionCode 7`. Les livrables signés s
 - SHA-256 AAB : `116707FADBACFCDCF22A7744D1BE9EE7D0D93140B9275E8822425969EF99FF0B`
 - Validation : TypeScript sans erreur, 66 tests réussis, `bundleRelease` et `assembleRelease` réussis.
 
-La connexion Google de la version distribuée par Play nécessitait un client OAuth Android associé à la clé de signature générée par Google Play. Package : `app.memocycle.mobile`. SHA-1 Play : `05:16:EF:26:8E:8D:4A:00:BD:86:B9:4F:9B:50:08:36:D7:C3:D9:3C`.
+La connexion Google de la version distribuée par Play nécessitait un client OAuth Android associé à la clé de signature générée par Google Play. Le client `MémoCycle Android Google Play` a été créé pour le package `app.memocycle.mobile` et la SHA-1 Play `05:16:EF:26:8E:8D:4A:00:BD:86:B9:4F:9B:50:08:36:D7:C3:D9:3C`.
+
+La release `7 (1.0.6)` est publiée et accessible aux testeurs internes depuis le 19 septembre 2026 à 13:12. Google annonce une propagation généralement inférieure à une heure. Lien : https://play.google.com/apps/internaltest/4701281405599427540.
