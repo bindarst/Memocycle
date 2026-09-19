@@ -3,7 +3,7 @@ const config: ExpoConfig = {
   name: "MémoCycle",
   slug: "memocycle",
   owner: "bindarst",
-  version: "1.0.5",
+  version: "1.0.6",
   scheme: "memocycle",
   extra: { eas: { projectId: "3390691f-af2b-4a28-b94d-c99a9910385d" } },
   icon: "./assets/icon.png",
@@ -17,12 +17,12 @@ const config: ExpoConfig = {
   },
   android: {
     package: "app.memocycle.mobile",
-    versionCode: 6,
+    versionCode: 7,
     allowBackup: false,
     blockedPermissions: ["android.permission.SYSTEM_ALERT_WINDOW"],
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#365CF5",
+      backgroundColor: "#161616",
     },
   },
   plugins: [
