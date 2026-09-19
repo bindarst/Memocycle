@@ -71,35 +71,48 @@ export default function Subject() {
   return (
     <Screen>
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <IconButton
-          icon={ArrowLeft01Icon}
-          accessibilityLabel="Retour"
-          onPress={() => router.back()}
-        />
+      <View style={{ gap: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <IconButton
+            icon={ArrowLeft01Icon}
+            accessibilityLabel="Retour"
+            onPress={() => router.back()}
+          />
+          {subject && (
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: accent.color,
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <AppIcon icon={category.icon} size={23} color="#FFFFFF" />
+            </View>
+          )}
+          <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+            <Label large style={{ flexShrink: 1 }}>
+              {String(subject?.title ?? "Matière introuvable")}
+            </Label>
+            {subject && (
+              <Text style={{ fontSize: 12, fontWeight: "600", color: accent.color }}>
+                {category.label}
+              </Text>
+            )}
+          </View>
+        </View>
         {subject && (
-          <View
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              backgroundColor: accent.color,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <AppIcon icon={category.icon} size={23} color="#FFFFFF" />
+          <View style={{ alignItems: "flex-end" }}>
+            <EntityForm
+              kind="subject"
+              entityId={id}
+              triggerTitle="Modifier"
+            />
           </View>
         )}
-        <View style={{ flex: 1, gap: 2 }}>
-          <Label large>{String(subject?.title ?? "Matière introuvable")}</Label>
-          {subject && (
-            <Text style={{ fontSize: 12, fontWeight: "600", color: accent.color }}>
-              {category.label}
-            </Text>
-          )}
-        </View>
-        {subject && <EntityForm kind="subject" entityId={id} />}
       </View>
 
       {!!subject?.description && (

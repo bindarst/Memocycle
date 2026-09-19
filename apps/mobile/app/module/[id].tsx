@@ -42,24 +42,31 @@ export default function Module() {
   return (
     <Screen>
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <IconButton
-          icon={ArrowLeft01Icon}
-          accessibilityLabel="Retour"
-          onPress={() => router.back()}
-        />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 13, color: c.textSecondary }}>
-            {String(subject?.title ?? "")}
-          </Text>
-          <Label large>{String(module?.title ?? "Module introuvable")}</Label>
+      <View style={{ gap: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <IconButton
+            icon={ArrowLeft01Icon}
+            accessibilityLabel="Retour"
+            onPress={() => router.back()}
+          />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ fontSize: 13, color: c.textSecondary }} numberOfLines={1}>
+              {String(subject?.title ?? "")}
+            </Text>
+            <Label large style={{ flexShrink: 1 }}>
+              {String(module?.title ?? "Module introuvable")}
+            </Label>
+          </View>
         </View>
         {module && (
-          <EntityForm
-            kind="module"
-            subjectId={String(module.subjectId)}
-            entityId={id}
-          />
+          <View style={{ alignItems: "flex-end" }}>
+            <EntityForm
+              kind="module"
+              subjectId={String(module.subjectId)}
+              entityId={id}
+              triggerTitle="Modifier"
+            />
+          </View>
         )}
       </View>
 
