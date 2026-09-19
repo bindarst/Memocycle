@@ -125,3 +125,17 @@ Vérifications du 17 septembre : 0 erreur TypeScript, 0 erreur ESLint, 60/60 tes
 - `versionCode: 7`, `versionName: 1.0.6`. APK et AAB signés dans `artifacts/`. TypeScript, 66 tests, `bundleRelease` et `assembleRelease` réussissent.
 - Cause de l'échec Google sur la version Play : le client OAuth Android existant était associé à la clé historique de l'APK direct, alors que Google Play signe les téléchargements avec sa propre clé. Le client `MémoCycle Android Google Play` a été créé pour `app.memocycle.mobile`, SHA-1 `05:16:EF:26:8E:8D:4A:00:BD:86:B9:4F:9B:50:08:36:D7:C3:D9:3C`, ID `575543516415-5po2mo03pgjn5mp56396v51e4h06a9ue.apps.googleusercontent.com`.
 - La release `7 (1.0.6)` est publiée sur le canal de test interne et affichée « Accessible aux testeurs internes » depuis le 19 septembre 2026 à 13:12. Lien inchangé : `https://play.google.com/apps/internaltest/4701281405599427540`. Google indique que la propagation peut prendre jusqu'à une heure.
+
+## Android 1.0.7
+
+- L'écran d'ajout/modification d'une matière propose maintenant 12 catégories,
+  10 couleurs Carbon et un aperçu en direct. La bibliothèque et la fiche matière
+  utilisent réellement l'icône et la couleur enregistrées ; auparavant ces valeurs
+  étaient stockées mais l'interface affichait toujours le même livre gris.
+- `versionCode: 8`, `versionName: 1.0.7`. Les livrables signés sont
+  `artifacts/Memocycle-v1.0.7.apk` et `.aab`, copiés aussi dans
+  `C:\Users\Adminpc\OneDrive\Memocycle\`. L'AAB est prêt à être importé dans Play
+  Console mais n'y a pas encore été envoyé.
+- TypeScript, ESLint, compilation API, 66 tests, `assembleRelease` et
+  `bundleRelease` réussissent. La procédure autonome est dans
+  `docs/COMMENT_METTRE_A_JOUR_GOOGLE_PLAY.md`.

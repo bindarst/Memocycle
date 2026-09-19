@@ -614,6 +614,8 @@ export function ListRow({
   danger = false,
   showChevron = true,
   rightComponent,
+  iconColor,
+  iconBackgroundColor,
   style,
 }: {
   title: string;
@@ -625,6 +627,8 @@ export function ListRow({
   danger?: boolean;
   showChevron?: boolean;
   rightComponent?: React.ReactNode;
+  iconColor?: string;
+  iconBackgroundColor?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const c = usePalette();
@@ -654,7 +658,7 @@ export function ListRow({
               width: 32,
               height: 32,
               borderRadius: radius.sm,
-              backgroundColor: danger ? c.dangerSoft : c.surfaceMuted,
+              backgroundColor: iconBackgroundColor ?? (danger ? c.dangerSoft : c.surfaceMuted),
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -662,7 +666,7 @@ export function ListRow({
             <AppIcon
               icon={Icon}
               size={17}
-              color={danger ? c.danger : c.textPrimary}
+              color={iconColor ?? (danger ? c.danger : c.textPrimary)}
               strokeWidth={1.8}
             />
           </View>

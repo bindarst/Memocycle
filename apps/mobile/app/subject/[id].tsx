@@ -28,6 +28,8 @@ import { displayDate } from "../../src/utils/dates";
 import { useAuth } from "../../src/auth/AuthProvider";
 import { remove } from "../../src/database/repository";
 import { LocalPdfSection } from "../../src/ui/LocalPdfSection";
+import { AppIcon } from "../../src/ui/Icon";
+import { subjectCategory, subjectColor } from "../../src/ui/subjectAppearance";
 
 export default function Subject() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -63,6 +65,8 @@ export default function Subject() {
         (new Date(String(nextExam.examAt)).getTime() - Date.now()) / 86_400_000,
       )
     : null;
+  const category = subjectCategory(subject?.iconKey);
+  const accent = subjectColor(subject?.colorKey);
 
   return (
     <Screen>
@@ -73,8 +77,27 @@ export default function Subject() {
           accessibilityLabel="Retour"
           onPress={() => router.back()}
         />
-        <View style={{ flex: 1 }}>
+        {subject && (
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              backgroundColor: accent.color,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <AppIcon icon={category.icon} size={23} color="#FFFFFF" />
+          </View>
+        )}
+        <View style={{ flex: 1, gap: 2 }}>
           <Label large>{String(subject?.title ?? "Matière introuvable")}</Label>
+          {subject && (
+            <Text style={{ fontSize: 12, fontWeight: "600", color: accent.color }}>
+              {category.label}
+            </Text>
+          )}
         </View>
         {subject && <EntityForm kind="subject" entityId={id} />}
       </View>

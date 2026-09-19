@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { Modal, View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import {
-  Book01Icon,
-  FlaskConicalIcon,
-  LanguagesIcon,
-  Calculator01Icon,
   Tick01Icon,
   Add01Icon,
   PencilEdit01Icon,
@@ -18,6 +14,7 @@ import {
   Label,
   Field,
   Button,
+  Card,
   ErrorText,
   useAction,
   useEntities,
@@ -26,20 +23,7 @@ import {
 import { AppIcon } from "./Icon";
 import { ExamDatePicker } from "./ExamDatePicker";
 import { examTimestamp } from "../utils/examDate";
-
-const ICONS = [
-  { key: "book", label: "Livre", icon: Book01Icon },
-  { key: "science", label: "Sciences", icon: FlaskConicalIcon },
-  { key: "language", label: "Langues", icon: LanguagesIcon },
-  { key: "math", label: "Maths", icon: Calculator01Icon },
-];
-
-const COLORS = [
-  { key: "blue", label: "Bleu", color: "#3B82F6" },
-  { key: "green", label: "Vert", color: "#10B981" },
-  { key: "amber", label: "Ambre", color: "#F59E0B" },
-  { key: "slate", label: "Ardoise", color: "#64748B" },
-];
+import { SUBJECT_CATEGORIES, SUBJECT_COLORS, subjectCategory, subjectColor } from "./subjectAppearance";
 
 export function EntityForm({
   kind,
@@ -136,6 +120,46 @@ export function EntityForm({
 
           {kind === "subject" && (
             <>
+              {(() => {
+                const selectedCategory = subjectCategory(iconKey);
+                const selectedColor = subjectColor(colorKey);
+                return (
+                  <Card
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      borderColor: selectedColor.color,
+                      backgroundColor: `${selectedColor.color}12`,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 48,
+                        height: 48,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: selectedColor.color,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <AppIcon icon={selectedCategory.icon} size={24} color="#FFFFFF" />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: selectedColor.color, textTransform: "uppercase", letterSpacing: 0.6 }}>
+                        Aperçu de la matière
+                      </Text>
+                      <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "700", color: c.textPrimary }}>
+                        {title.trim() || "Nom de la matière"}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: c.textSecondary }}>
+                        {selectedCategory.label} · {selectedColor.label}
+                      </Text>
+                    </View>
+                  </Card>
+                );
+              })()}
+
               <View style={{ gap: 8 }}>
                 <Text
                   style={{
@@ -144,23 +168,29 @@ export function EntityForm({
                     color: c.textSecondary,
                   }}
                 >
-                  Icône
+                  Catégorie
                 </Text>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  {ICONS.map(({ key, label, icon }) => {
+                <Text style={{ fontSize: 12, color: c.textSecondary, marginTop: -4 }}>
+                  Choisis le domaine qui représentera la matière dans ta bibliothèque.
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {SUBJECT_CATEGORIES.map(({ key, label, icon }) => {
                     const isSelected = iconKey === key;
                     return (
                       <Pressable
                         key={key}
                         onPress={() => setIconKey(key)}
                         accessibilityRole="button"
-                        accessibilityLabel={label}
+                        accessibilityLabel={`Catégorie ${label}`}
+                        accessibilityState={{ selected: isSelected }}
                         style={({ pressed }) => ({
-                          flex: 1,
+                          width: "31%",
+                          minHeight: 76,
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 4,
-                          paddingVertical: 10,
+                          gap: 6,
+                          paddingHorizontal: 5,
+                          paddingVertical: 9,
                           borderRadius: 12,
                           backgroundColor: isSelected
                             ? c.primarySoft
@@ -172,12 +202,13 @@ export function EntityForm({
                       >
                         <AppIcon
                           icon={icon}
-                          size={20}
+                          size={22}
                           color={isSelected ? c.primary : c.textSecondary}
                         />
                         <Text
                           style={{
-                            fontSize: 11,
+                            fontSize: 10,
+                            textAlign: "center",
                             fontWeight: isSelected ? "700" : "500",
                             color: isSelected ? c.primary : c.textSecondary,
                           }}
@@ -200,38 +231,46 @@ export function EntityForm({
                 >
                   Couleur d’accent
                 </Text>
-                <View style={{ flexDirection: "row", gap: 14 }}>
-                  {COLORS.map(({ key, label, color }) => {
+                <Text style={{ fontSize: 12, color: c.textSecondary, marginTop: -4 }}>
+                  La couleur apparaît immédiatement dans l’aperçu et sur la matière enregistrée.
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {SUBJECT_COLORS.map(({ key, label, color }) => {
                     const isSelected = colorKey === key;
                     return (
                       <Pressable
                         key={key}
                         onPress={() => setColorKey(key)}
                         accessibilityRole="button"
-                        accessibilityLabel={label}
+                        accessibilityLabel={`Couleur ${label}`}
+                        accessibilityState={{ selected: isSelected }}
                         style={({ pressed }) => ({
+                          width: "18%",
                           alignItems: "center",
-                          gap: 4,
+                          gap: 5,
+                          paddingVertical: 5,
+                          borderRadius: 10,
+                          backgroundColor: isSelected ? `${color}18` : "transparent",
                           opacity: pressed ? 0.75 : 1,
                         })}
                       >
                         <View
                           style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
                             backgroundColor: color,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderWidth: isSelected ? 3 : 0,
-                            borderColor: c.background,
+                            borderWidth: isSelected ? 3 : 1,
+                            borderColor: isSelected ? c.textPrimary : c.border,
                           }}
                         >
                           {isSelected && <AppIcon icon={Tick01Icon} size={16} color="#FFFFFF" />}
                         </View>
                         <Text
                           style={{
-                            fontSize: 11,
+                            fontSize: 10,
                             color: isSelected ? c.textPrimary : c.textSecondary,
                             fontWeight: isSelected ? "700" : "500",
                           }}

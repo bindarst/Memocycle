@@ -70,18 +70,18 @@ npx expo run:ios
 
 Ensuite : `npm run dev:mobile` à la racine.
 
-L'APK de production signé (version Android 1.0.5, code 6) est livré dans
-`C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.apk`. Ouvrir ce fichier
-sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
-L'installation garde les données locales lorsque la signature d'origine est conservée.
-Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.6.apk` et
-`artifacts/Memocycle-v1.0.6.aab` (version Android 1.0.6, code 7), également
-copiés dans `C:\Users\Adminpc\OneDrive\Memocycle\`. La version 1.0.6 est
+Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.7.apk` et
+`artifacts/Memocycle-v1.0.7.aab` (version Android 1.0.7, code 8), également
+copiés dans `C:\Users\Adminpc\OneDrive\Memocycle\`. Ouvrir l'APK sur un téléphone
+Android permet une installation directe, sans Expo ni USB. Google Play demande
+le fichier AAB. La version 1.0.6 est actuellement
 publiée sur le canal de test interne Google Play. Le canal est
 actif pour `bindarst2011@gmail.com` et le lien d'inscription est
 https://play.google.com/apps/internaltest/4701281405599427540. La mise en
 production reste soumise au test fermé obligatoire de 12 testeurs pendant
 14 jours affiché par Play Console.
+La procédure de reconstruction et d'importation est détaillée dans
+[docs/COMMENT_METTRE_A_JOUR_GOOGLE_PLAY.md](docs/COMMENT_METTRE_A_JOUR_GOOGLE_PLAY.md).
 La [présentation de l'application](https://memocycle.135-125-100-75.sslip.io/v1/public),
 la [politique de confidentialité](https://memocycle.135-125-100-75.sslip.io/v1/public/privacy)
 et la [demande de suppression](https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account)

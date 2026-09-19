@@ -6,11 +6,35 @@ export const subjectInput = z
     title,
     description,
     iconKey: z
-      .enum(["book", "science", "language", "math"])
+      .enum([
+        "book",
+        "science",
+        "language",
+        "math",
+        "computer",
+        "humanities",
+        "arts",
+        "music",
+        "law",
+        "health",
+        "economics",
+        "engineering",
+      ])
       .nullable()
       .default(null),
     colorKey: z
-      .enum(["blue", "green", "amber", "slate"])
+      .enum([
+        "blue",
+        "cyan",
+        "teal",
+        "green",
+        "amber",
+        "orange",
+        "red",
+        "purple",
+        "pink",
+        "slate",
+      ])
       .nullable()
       .default(null),
     position: z.number().int().min(0).default(0),

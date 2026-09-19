@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { router } from "expo-router";
 import { View, Text } from "react-native";
-import { Add01Icon, Book01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import {
   Screen,
   Label,
@@ -16,6 +16,7 @@ import {
 } from "../../src/ui/components";
 import { EntityForm } from "../../src/ui/EntityForm";
 import { CourseCard } from "../../src/ui/CourseCard";
+import { subjectCategory, subjectColor } from "../../src/ui/subjectAppearance";
 import {
   courseSchema,
   planSchema,
@@ -116,12 +117,17 @@ export default function Library() {
           {subjects.map((s) => {
             const moduleCount = modules.filter((m) => m.subjectId === s.id).length;
             const courseCount = courses.filter((crs) => crs.subjectId === s.id).length;
+            const category = subjectCategory(s.iconKey);
+            const accent = subjectColor(s.colorKey);
             return (
               <ListRow
                 key={s.id}
-                icon={Book01Icon}
+                icon={category.icon}
+                iconColor="#FFFFFF"
+                iconBackgroundColor={accent.color}
                 title={String(s.title)}
-                subtitle={`${moduleCount} module${moduleCount > 1 ? "s" : ""} · ${courseCount} cours`}
+                subtitle={`${category.label} · ${moduleCount} module${moduleCount > 1 ? "s" : ""} · ${courseCount} cours`}
+                style={{ borderLeftWidth: 3, borderLeftColor: accent.color }}
                 showChevron
                 onPress={() => router.push(`/subject/${s.id}`)}
               />
@@ -159,4 +165,3 @@ export default function Library() {
     </Screen>
   );
 }
-
