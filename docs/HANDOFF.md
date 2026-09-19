@@ -134,8 +134,9 @@ Vérifications du 17 septembre : 0 erreur TypeScript, 0 erreur ESLint, 60/60 tes
   étaient stockées mais l'interface affichait toujours le même livre gris.
 - `versionCode: 8`, `versionName: 1.0.7`. Les livrables signés sont
   `artifacts/Memocycle-v1.0.7.apk` et `.aab`, copiés aussi dans
-  `C:\Users\Adminpc\OneDrive\Memocycle\`. L'AAB est prêt à être importé dans Play
-  Console mais n'y a pas encore été envoyé.
+  `C:\Users\Adminpc\OneDrive\Memocycle\`. L'AAB code 8 a été publié le
+  19 septembre sur le canal de test interne et Play Console l'affiche comme
+  « Accessible aux testeurs internes ».
 - TypeScript, ESLint, compilation API, 66 tests, `assembleRelease` et
   `bundleRelease` réussissent. La procédure autonome est dans
   `docs/COMMENT_METTRE_A_JOUR_GOOGLE_PLAY.md`.

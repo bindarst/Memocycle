@@ -1,11 +1,11 @@
 # Publication Google Play — MémoCycle
 
-État au 19 septembre 2026 : MémoCycle existe dans le compte Play Console **Bindarst** sous l'ID `4972354992207967892`, séparément de la GMAO « Iso Care Maint » (`com.equaz.mobile`). La version 1.0.6 (code 7) est disponible sur le canal de test interne actif pour `bindarst2011@gmail.com` : https://play.google.com/apps/internaltest/4701281405599427540. La version 1.0.7 (code 8) est construite et prête à être importée. L'application n'est pas encore disponible publiquement en production.
+État au 19 septembre 2026 : MémoCycle existe dans le compte Play Console **Bindarst** sous l'ID `4972354992207967892`, séparément de la GMAO « Iso Care Maint » (`com.equaz.mobile`). La version 1.0.7 (code 8) est publiée et accessible aux testeurs internes pour `bindarst2011@gmail.com` : https://play.google.com/apps/internaltest/4701281405599427540. L'application n'est pas encore disponible publiquement en production.
 
 ## Fichiers prêts
 
-- App Bundle Google Play signé : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.7.aab` (83 834 787 octets ; SHA-256 `116707FADBACFCDCF22A7744D1BE9EE7D0D93140B9275E8822425969EF99FF0B`).
-- APK autonome : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.7.apk` (128 132 380 octets ; SHA-256 `99DD1C804341ACC4583F9FC493E6FA8D9F6A118953B9C6529DB9AC1ADD471959`). L'APK ne remplace pas l'AAB demandé par Play.
+- App Bundle Google Play signé et publié : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.7.aab` (83 835 904 octets ; SHA-256 `D625FADA8477B1794B51E3CF6C5666F8DB8E6DA9A6666FF716DC0F715B054EDA`).
+- APK autonome : `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.7.apk` (128 135 912 octets ; SHA-256 `9FF0D3A0B10CD4F80256AD1CCBA62CE723FC814CD35B4AC36E1170E363F4AF82`). L'APK ne remplace pas l'AAB demandé par Play.
 - Package `app.memocycle.mobile`, version `1.0.7`, code `8`, cible API Android `36`. Certificat de signature historique SHA-1 `2E:58:2C:B8:35:27:1E:CA:47:91:05:7F:AE:AA:D2:71:11:0C:DC:25`, SHA-256 `88:76:D4:8F:54:D4:02:53:AE:D7:05:DC:79:5F:EF:B6:5C:80:08:45:D3:AF:85:5B:EC:75:30:41:DF:2F:AD:84`.
 - Icône et bannière : `store-assets/icon-512.png` (512 × 512) et `store-assets/feature-graphic.png` (1024 × 500).
 
