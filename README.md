@@ -70,11 +70,11 @@ npx expo run:ios
 
 Ensuite : `npm run dev:mobile` à la racine.
 
-Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.7.apk` et
-`artifacts/Memocycle-v1.0.7.aab` (version Android 1.0.7, code 8), également
+Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.8.apk` et
+`artifacts/Memocycle-v1.0.8.aab` (version Android 1.0.8, code 9), également
 copiés dans `C:\Users\Adminpc\OneDrive\Memocycle\`. Ouvrir l'APK sur un téléphone
 Android permet une installation directe, sans Expo ni USB. Google Play demande
-le fichier AAB. La version 1.0.7 est publiée sur le canal de test interne Google Play. Le canal est
+le fichier AAB. La version 1.0.7 est publiée sur le canal de test interne Google Play ; la 1.0.8 est prête à être importée. Le canal est
 actif pour `bindarst2011@gmail.com` et le lien d'inscription est
 https://play.google.com/apps/internaltest/4701281405599427540. La mise en
 production reste soumise au test fermé obligatoire de 12 testeurs pendant

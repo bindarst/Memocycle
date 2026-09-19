@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { addDays, addMonths, format, startOfMonth, startOfWeek } from "date-fns";
+import { addDays, addMonths, format, nextMonday, startOfMonth, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar01Icon, ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { AppIcon } from "./Icon";
@@ -80,11 +80,14 @@ export function ExamDatePicker({
             })}
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            {[{ label: "Aujourd’hui", offset: 0 }, { label: "Demain", offset: 1 }, { label: "+7 jours", offset: 7 }].map(({ label, offset }) => (
+            {[{ label: "Aujourd’hui", offset: 0 }, { label: "Demain", offset: 1 }, { label: "+7 jours", offset: 7 }, { label: "+14 jours", offset: 14 }, { label: "+1 mois", offset: 30 }].map(({ label, offset }) => (
               <Pressable key={label} accessibilityRole="button" onPress={() => chooseDay(addDays(new Date(), offset))} style={{ paddingHorizontal: 10, paddingVertical: 8, borderRadius: 9, backgroundColor: c.primarySoft }}>
                 <Text style={{ color: c.primary, fontSize: 12, fontWeight: "600" }}>{label}</Text>
               </Pressable>
             ))}
+            <Pressable accessibilityRole="button" onPress={() => chooseDay(nextMonday(new Date()))} style={{ paddingHorizontal: 10, paddingVertical: 8, borderRadius: 9, backgroundColor: c.primarySoft }}>
+              <Text style={{ color: c.primary, fontSize: 12, fontWeight: "600" }}>Lundi prochain</Text>
+            </Pressable>
           </View>
         </View>
       )}

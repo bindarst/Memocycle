@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   addMonths,
+  addDays,
   addWeeks,
   eachDayOfInterval,
   startOfWeek,
@@ -341,6 +342,18 @@ export default function Calendar() {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const nextSevenDays = Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(startOfDay(new Date()), index);
+    const key = dayKey(date);
+    const items = allItems.filter((item) => dayKey(new Date(item.at)) === key);
+    const minutes = items.reduce(
+      (sum, item) => sum + (item.type === "external" || item.type === "exam" ? 0 : item.estimatedMinutes),
+      0,
+    );
+    return { date, key, items: items.length, minutes };
+  });
+  const weeklyMinutes = nextSevenDays.reduce((sum, day) => sum + day.minutes, 0);
+  const dailyTarget = settings?.dailyStudyMinutes ?? 45;
 
   // Render individual event item
   const renderEventCard = (item: (typeof allItems)[0]) => {
@@ -458,6 +471,49 @@ export default function Calendar() {
         value={mode}
         onChange={(v) => setMode(v as CalendarViewMode)}
       />
+
+      <Card style={{ gap: 12, padding: 14 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
+          <View style={{ gap: 2 }}>
+            <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: "700" }}>
+              Charge des 7 prochains jours
+            </Text>
+            <Text style={{ color: c.textSecondary, fontSize: 12 }}>
+              {weeklyMinutes} min planifiées · objectif {dailyTarget * 7} min
+            </Text>
+          </View>
+          {conflicts.length > 0 && <Pill tone="warning">{conflicts.length} conflit{conflicts.length > 1 ? "s" : ""}</Pill>}
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 5 }}>
+          {nextSevenDays.map((day) => {
+            const overloaded = day.minutes > dailyTarget;
+            const selected = selectedDay === day.key;
+            return (
+              <Pressable
+                key={day.key}
+                accessibilityRole="button"
+                accessibilityLabel={`${format(day.date, "EEEE d MMMM", { locale: fr })}, ${day.minutes} minutes`}
+                onPress={() => {
+                  setSelectedDay(day.key);
+                  setCurrentDate(day.date);
+                  if (mode === "Agenda") setMode("Semaine");
+                }}
+                style={{ flex: 1, alignItems: "center", gap: 5, paddingVertical: 7, borderRadius: 9, backgroundColor: selected ? c.primarySoft : c.surfaceMuted }}
+              >
+                <Text style={{ fontSize: 10, fontWeight: "700", color: selected ? c.primary : c.textSecondary }}>
+                  {format(day.date, "EEE", { locale: fr }).slice(0, 2).toUpperCase()}
+                </Text>
+                <View style={{ width: "70%", height: 34, borderRadius: 6, backgroundColor: c.border, justifyContent: "flex-end", overflow: "hidden" }}>
+                  <View style={{ height: `${Math.max(8, Math.min(100, (day.minutes / Math.max(1, dailyTarget)) * 100))}%`, backgroundColor: overloaded ? c.warning : c.primary }} />
+                </View>
+                <Text style={{ fontSize: 9, fontWeight: "600", color: overloaded ? c.warning : c.textSecondary }}>
+                  {day.minutes}m
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Card>
 
       {/* Box "À planifier" (unscheduled courses or exams without study session) */}
       {toPlanItems.length > 0 && (

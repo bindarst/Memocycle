@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import {
@@ -8,6 +8,7 @@ import {
   ViewIcon,
   Layers01Icon,
   Cancel01Icon,
+  Clock01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Screen,
@@ -40,6 +41,11 @@ import {
   type StudyMethod,
 } from "@memocycle/contracts";
 import { recommendStudyMethod } from "../../src/review/methodRecommendationService";
+import {
+  formatSessionDuration,
+  REVIEW_RATING_COPY,
+  reviewSessionScore,
+} from "../../src/review/reviewExperience";
 
 export function calculateSessionRating(ratings: ReviewRating[]): ReviewRating {
   if (!ratings.length) return "good";
@@ -80,6 +86,15 @@ export default function Review() {
   const [done, setDone] = useState(false);
   const [globalRating, setGlobalRating] = useState<ReviewRating>("good");
   const [selectedMethod, setSelectedMethod] = useState<StudyMethod | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(
+      () => setElapsedSeconds(Math.max(0, Math.round((Date.now() - startTimeRef.current) / 1000))),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, []);
 
   if (!rawCourse || !rawPlan) {
     return (
@@ -156,16 +171,17 @@ export default function Review() {
   };
 
   const renderRatingButtons = (onSelect: (rating: ReviewRating) => void, busy = false) => {
-    const buttons: { label: string; rating: ReviewRating; tone: "again" | "hard" | "good" | "easy" }[] = [
-      { label: "Oublié", rating: "again", tone: "again" },
-      { label: "Difficile", rating: "hard", tone: "hard" },
-      { label: "Bien", rating: "good", tone: "good" },
-      { label: "Facile", rating: "easy", tone: "easy" },
+    const buttons: { rating: ReviewRating; tone: "again" | "hard" | "good" | "easy" }[] = [
+      { rating: "again", tone: "again" },
+      { rating: "hard", tone: "hard" },
+      { rating: "good", tone: "good" },
+      { rating: "easy", tone: "easy" },
     ];
 
     return (
       <View style={styles.ratingGrid}>
-        {buttons.map(({ label, rating, tone }) => {
+        {buttons.map(({ rating, tone }) => {
+          const copy = REVIEW_RATING_COPY[rating];
           let bg = c.surfaceMuted;
           let border = c.border;
           let textColor = c.textPrimary;
@@ -192,7 +208,7 @@ export default function Review() {
             <Pressable
               key={rating}
               accessibilityRole="button"
-              accessibilityLabel={`Évaluation : ${label}`}
+              accessibilityLabel={`Évaluation : ${copy.label}. ${copy.description}`}
               disabled={busy}
               onPress={() => onSelect(rating)}
               style={({ pressed }) => [
@@ -204,7 +220,10 @@ export default function Review() {
                 },
               ]}
             >
-              <Text style={[styles.ratingLabel, { color: textColor }]}>{label}</Text>
+              <Text style={[styles.ratingLabel, { color: textColor }]}>{copy.label}</Text>
+              <Text style={[styles.ratingDescription, { color: textColor }]}>
+                {copy.description}
+              </Text>
             </Pressable>
           );
         })}
@@ -223,6 +242,20 @@ export default function Review() {
         <Pill tone="primary">
           {plan.schedulerType === "fsrs" ? "FSRS" : `${plan.currentStep}/6`}
         </Pill>
+      </View>
+
+      <View style={[styles.sessionStrip, { backgroundColor: c.surfaceMuted }]}>
+        <View style={styles.sessionStripItem}>
+          <AppIcon icon={Clock01Icon} size={14} color={c.primary} />
+          <Text style={[styles.sessionStripValue, { color: c.textPrimary }]}>
+            {formatSessionDuration(elapsedSeconds)}
+          </Text>
+        </View>
+        <Text style={{ color: c.textSecondary, fontSize: 12 }}>
+          {totalItems > 0
+            ? `${Object.keys(itemRatings).length}/${totalItems} fiches évaluées`
+            : "Auto-évaluation du cours"}
+        </Text>
       </View>
 
       <View style={{ gap: 2 }}>
@@ -277,6 +310,16 @@ export default function Review() {
           </Text>
 
           {totalItems > 0 && (
+            <>
+            <View style={[styles.scoreCard, { backgroundColor: c.primarySoft }]}>
+              <Text style={{ color: c.primary, fontSize: 12, fontWeight: "700" }}>MAÎTRISE DE LA SESSION</Text>
+              <Text style={{ color: c.primary, fontSize: 28, fontWeight: "800" }}>
+                {reviewSessionScore(Object.values(itemRatings))}%
+              </Text>
+              <Text style={{ color: c.textSecondary, fontSize: 12 }}>
+                {formatSessionDuration(elapsedSeconds)} · {totalItems} fiche{totalItems > 1 ? "s" : ""}
+              </Text>
+            </View>
             <View style={styles.breakdownRow}>
               <View style={styles.breakdownItem}>
                 <Text style={[styles.breakdownVal, { color: c.danger }]}>
@@ -303,6 +346,7 @@ export default function Review() {
                 <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>Facile</Text>
               </View>
             </View>
+            </>
           )}
 
           <Button
@@ -466,17 +510,23 @@ const styles = StyleSheet.create({
   answerContainer: { paddingTop: 12, borderTopWidth: 1, gap: 6 },
   answerHeader: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
   answerText: { fontSize: 15, lineHeight: 20, fontWeight: "600" },
-  ratingGrid: { flexDirection: "row", gap: 6 },
+  ratingGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   ratingButton: {
-    flex: 1,
-    minHeight: 40,
+    width: "48.5%",
+    minHeight: 68,
     borderRadius: 10,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
   },
-  ratingLabel: { fontSize: 13, fontWeight: "600" },
+  ratingLabel: { fontSize: 14, fontWeight: "700" },
+  ratingDescription: { fontSize: 10, lineHeight: 14, textAlign: "center", opacity: 0.85 },
+  sessionStrip: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  sessionStripItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  sessionStripValue: { fontSize: 12, fontWeight: "700" },
+  scoreCard: { alignItems: "center", gap: 2, borderRadius: 12, paddingVertical: 12 },
   resultCard: { alignItems: "center", padding: 24, gap: 12 },
   resultIcon: {
     width: 52,

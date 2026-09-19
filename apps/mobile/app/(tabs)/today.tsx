@@ -308,6 +308,33 @@ export default function Today() {
         )}
       </Card>
 
+      <View style={styles.quickActions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ajouter un nouveau cours"
+          onPress={() => router.push("/course/new")}
+          style={[styles.quickAction, { backgroundColor: c.surface, borderColor: c.border }]}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: c.primarySoft }]}>
+            <AppIcon icon={Add01Icon} size={18} color={c.primary} />
+          </View>
+          <Text style={[styles.quickActionTitle, { color: c.textPrimary }]}>Nouveau cours</Text>
+          <Text style={[styles.quickActionCaption, { color: c.textSecondary }]}>Encoder rapidement</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir le planning"
+          onPress={() => router.push("/(tabs)/calendar")}
+          style={[styles.quickAction, { backgroundColor: c.surface, borderColor: c.border }]}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: c.warningSoft }]}>
+            <AppIcon icon={Clock01Icon} size={18} color={c.warning} />
+          </View>
+          <Text style={[styles.quickActionTitle, { color: c.textPrimary }]}>Planifier</Text>
+          <Text style={[styles.quickActionCaption, { color: c.textSecondary }]}>Organiser la semaine</Text>
+        </Pressable>
+      </View>
+
       {/* Planned Study Sessions */}
       {todaySessions.length > 0 && (
         <View style={{ gap: 8 }}>
@@ -468,6 +495,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  quickActions: { flexDirection: "row", gap: 10 },
+  quickAction: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12, gap: 4 },
+  quickActionIcon: { width: 34, height: 34, borderRadius: 9, alignItems: "center", justifyContent: "center", marginBottom: 3 },
+  quickActionTitle: { fontSize: 13, fontWeight: "700" },
+  quickActionCaption: { fontSize: 11, lineHeight: 15 },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -487,4 +519,3 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 });
-

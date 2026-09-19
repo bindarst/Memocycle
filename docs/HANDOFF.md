@@ -140,3 +140,14 @@ Vérifications du 17 septembre : 0 erreur TypeScript, 0 erreur ESLint, 60/60 tes
 - TypeScript, ESLint, compilation API, 66 tests, `assembleRelease` et
   `bundleRelease` réussissent. La procédure autonome est dans
   `docs/COMMENT_METTRE_A_JOUR_GOOGLE_PLAY.md`.
+
+## Android 1.0.8
+
+- L'accueil offre des accès rapides vers la création d'un cours et le planning.
+- Le parcours de révision affiche le temps écoulé, la progression, des explications
+  pour chaque niveau d'auto-évaluation et un score de maîtrise en fin de session.
+- Le planning contient une prévision interactive de charge sur sept jours et le
+  calendrier d'examen propose davantage de raccourcis de date.
+- `versionCode: 9`, `versionName: 1.0.8`. TypeScript, ESLint et 68 tests réussissent.
+  Les livrables signés sont préparés dans `artifacts/` et OneDrive. Ils ne sont pas
+  encore envoyés dans Play Console.
