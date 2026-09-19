@@ -75,6 +75,11 @@ L'APK de production signé (version Android 1.0.5, code 6) est livré dans
 sur un téléphone Android pour mettre l'application à jour, sans Expo ni USB.
 L'installation garde les données locales lorsque la signature d'origine est conservée.
 Le bundle signé pour Google Play est `C:\Users\Adminpc\OneDrive\Memocycle\Memocycle-v1.0.5.aab`.
+La version 1.0.5 est publiée sur le canal de test interne Google Play. Le canal est
+actif pour `bindarst2011@gmail.com` et le lien d'inscription est
+https://play.google.com/apps/internaltest/4701281405599427540. La mise en
+production reste soumise au test fermé obligatoire de 12 testeurs pendant
+14 jours affiché par Play Console.
 La [présentation de l'application](https://memocycle.135-125-100-75.sslip.io/v1/public),
 la [politique de confidentialité](https://memocycle.135-125-100-75.sslip.io/v1/public/privacy)
 et la [demande de suppression](https://memocycle.135-125-100-75.sslip.io/v1/public/delete-account)

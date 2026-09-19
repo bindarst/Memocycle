@@ -1,6 +1,6 @@
 # Publication Google Play — MémoCycle
 
-État au 17 septembre 2026 : le compte personnel Play Console **Bindarst** est actif. Il contient la GMAO « Iso Care Maint » (`com.equaz.mobile`), qui doit rester intacte. MémoCycle doit être créé comme **nouvelle application** avec le package `app.memocycle.mobile`. Aucun déploiement Play MémoCycle n'est encore confirmé.
+État au 19 septembre 2026 : MémoCycle existe dans le compte Play Console **Bindarst** sous l'ID `4972354992207967892`, séparément de la GMAO « Iso Care Maint » (`com.equaz.mobile`). La version 1.0.5 (code 6) est disponible sur le canal de test interne actif pour `bindarst2011@gmail.com` : https://play.google.com/apps/internaltest/4701281405599427540. Elle n'est pas encore disponible publiquement en production.
 
 ## Fichiers prêts
 
@@ -40,10 +40,11 @@ Description complète proposée :
 
 ## Points de publication à terminer
 
-1. Créer la fiche MémoCycle, puis choisir pour **Play App Signing** la **clé de signature d'application existante**. Si Google génère une autre clé, les installations directes de l'APK MémoCycle ne pourront pas être mises à jour par Play sans désinstallation ; leurs PDF locaux seraient alors perdus. Garder la clé privée hors Git.
-2. Faire au moins deux **vraies captures d'écran** de l'application sur Android. Aucun téléphone ADB ou émulateur configuré n'était disponible lors de la préparation du bundle ; ne pas présenter de maquette comme capture d'écran réelle.
-3. Compléter les questionnaires de contenu, la sécurité des données, l'accès des examinateurs (connexion Google requise), le classement par âge, la publicité, les coordonnées et les pays de diffusion. Les déclarations doivent correspondre au comportement effectivement vérifié de l'application.
-4. Vérifier la connexion Google sur un second compte Android. Le projet OAuth `memocycle` est en mode **Test** et seul `bindarst2011@gmail.com` figure dans la liste des testeurs. Toutefois, [Google précise que l'exception « Se connecter avec Google » s'applique lorsque seules les données d'identité de base sont demandées](https://support.google.com/cloud/answer/15549945?hl=fr) : les autres utilisateurs n'ont alors pas besoin d'être ajoutés comme testeurs et leurs autorisations n'expirent pas après sept jours. Le code MémoCycle demande un jeton d'identité, et aucun niveau d'accès sensible ou restreint n'est configuré dans la console. Ne pas présenter cela comme validé en conditions réelles avant un essai sur un compte non testeur. Le branding OAuth complet reste souhaitable, mais il ne faut pas acheter un domaine uniquement en supposant que le mode Test empêche cette connexion de base.
-5. Si Play Console impose à ce compte personnel les règles des nouveaux comptes, organiser un test fermé avec au moins 12 testeurs inscrits pendant 14 jours avant l'accès à la production. La console affiche le statut réel du compte.
+1. Faire au moins deux **vraies captures d'écran** de l'application sur Android. Ne pas présenter de maquette comme capture d'écran réelle.
+2. Compléter les questionnaires de contenu, la sécurité des données, l'accès des examinateurs, le classement par âge, la publicité, les coordonnées, la fiche principale et les pays de diffusion.
+3. Vérifier la connexion Google sur un second compte Android. Le projet OAuth `memocycle` est en mode **Test** et seul `bindarst2011@gmail.com` figure dans la liste des testeurs OAuth.
+4. Organiser le test fermé imposé par Play Console : au moins 12 testeurs inscrits sans interruption pendant 14 jours, puis demander l'accès à la production.
+
+Google Play App Signing utilise désormais une clé d'application SHA-256 `94:D9:5D:5C:F8:6A:FB:8E:74:17:F5:1F:7A:66:5B:79:87:56:98:B5:6F:DE:C8:59:8D:70:5A:F2:9F:B5:F5:7B`. La clé d'import reste la clé historique indiquée plus haut. Comme les clés d'application diffèrent, une installation APK directe existante ne pourra vraisemblablement pas être mise à jour directement par la version Play : sauvegarder les PDF locaux avant toute désinstallation.
 
 La publication n'est terminée que lorsque Play Console affiche une version approuvée et disponible dans le canal voulu. Un AAB construit localement ne suffit pas.
