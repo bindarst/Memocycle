@@ -10,6 +10,7 @@ coverage/
 *.db-wal
 *.db-shm
 apps/mobile/android/
+apps/mobile/android-locked-build/
 apps/mobile/ios/
 *.jks
 *.p8

@@ -3,7 +3,7 @@ const config: ExpoConfig = {
   name: "MémoCycle",
   slug: "memocycle",
   owner: "bindarst",
-  version: "1.0.9",
+  version: "1.0.10",
   scheme: "memocycle",
   extra: { eas: { projectId: "3390691f-af2b-4a28-b94d-c99a9910385d" } },
   icon: "./assets/icon.png",
@@ -17,7 +17,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "app.memocycle.mobile",
-    versionCode: 10,
+    versionCode: 11,
     allowBackup: false,
     blockedPermissions: ["android.permission.SYSTEM_ALERT_WINDOW"],
     adaptiveIcon: {
@@ -29,6 +29,7 @@ const config: ExpoConfig = {
     "expo-router",
     "./plugins/with-release-signing",
     "./plugins/with-short-cmake-builds",
+    "./plugins/with-memocycle-widget",
     "expo-secure-store",
     "expo-sqlite",
     "expo-notifications",

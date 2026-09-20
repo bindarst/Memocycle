@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, {
   Circle,
@@ -13,7 +13,7 @@ import {
   AiBrain01Icon,
   AlertCircleIcon,
 } from "@hugeicons/core-free-icons";
-import type { Plan } from "../database/entities";
+import type { Exam, Plan } from "../database/entities";
 import {
   averageRetention,
   curveHorizonMs,
@@ -28,10 +28,20 @@ const LEFT = 14;
 const TOP = 12;
 const BOTTOM = 24;
 
-export function MemoryCurve({ plans, now }: { plans: Plan[]; now: number }) {
+type Horizon = 7 | 14 | 30 | "exam";
+
+export function MemoryCurve({ plans, now, exams = [] }: { plans: Plan[]; now: number; exams?: Exam[] }) {
   const c = usePalette();
+  const [selectedHorizon, setSelectedHorizon] = useState<Horizon>(14);
   const active = plans.filter((plan) => plan.status === "active");
-  const horizon = curveHorizonMs(active);
+  const nextExam = exams
+    .filter((exam) => new Date(exam.examAt).getTime() > now)
+    .sort((a, b) => a.examAt.localeCompare(b.examAt))[0];
+  const horizon = selectedHorizon === "exam" && nextExam
+    ? Math.max(86_400_000, new Date(nextExam.examAt).getTime() - now)
+    : selectedHorizon === "exam"
+      ? curveHorizonMs(active)
+      : selectedHorizon * 86_400_000;
   const samples = Array.from({ length: 33 }, (_, index) => {
     const ratio = index / 32;
     const retention = active.length
@@ -74,6 +84,31 @@ export function MemoryCurve({ plans, now }: { plans: Plan[]; now: number }) {
         {current !== null ? (
           <Pill tone={current >= 90 ? "success" : "warning"}>{current} %</Pill>
         ) : null}
+      </View>
+
+      <View style={styles.horizons}>
+        {([7, 14, 30, "exam"] as Horizon[]).map((value) => {
+          const disabled = value === "exam" && !nextExam;
+          const selected = value === selectedHorizon;
+          return (
+            <Text
+              key={value}
+              accessibilityRole="button"
+              accessibilityState={{ selected, disabled }}
+              onPress={() => !disabled && setSelectedHorizon(value)}
+              style={[
+                styles.horizon,
+                {
+                  color: selected ? c.primary : c.textSecondary,
+                  backgroundColor: selected ? c.primarySoft : c.surfaceMuted,
+                  opacity: disabled ? 0.45 : 1,
+                },
+              ]}
+            >
+              {value === "exam" ? "Examen" : `${value} j`}
+            </Text>
+          );
+        })}
       </View>
 
       <Svg
@@ -174,5 +209,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   alertText: { fontSize: 13, fontWeight: "500" },
+  horizons: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+  horizon: { fontSize: 11, fontWeight: "700", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, overflow: "hidden" },
 });
-

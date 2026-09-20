@@ -42,6 +42,7 @@ import { useAuth } from "../../src/auth/AuthProvider";
 import { dayKey, displayDate } from "../../src/utils/dates";
 import { buildDailyPlan } from "../../src/planning/dailyPlanner";
 import { calculateStreaks } from "../../src/utils/streak";
+import { buildExamRescuePlan } from "../../src/planning/examRescuePlan";
 
 export default function Today() {
   const { state, userId } = useAuth();
@@ -176,6 +177,15 @@ export default function Today() {
     : null;
   const nextExamCourse = nextExam
     ? courses.find((c) => (c.examIds ?? []).includes(nextExam.id))
+    : null;
+  const rescuePlan = nextExam
+    ? buildExamRescuePlan(
+        nextExam,
+        courses,
+        plans,
+        settings?.dailyStudyMinutes ?? 30,
+        tick,
+      )
     : null;
 
   const userName = currentSession()?.user.displayName
@@ -335,6 +345,48 @@ export default function Today() {
         </Pressable>
       </View>
 
+      {rescuePlan && rescuePlan.daysLeft <= 30 && (
+        <Card style={{ gap: 12, borderColor: rescuePlan.readiness < 70 ? c.warning : c.border }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: "700" }}>
+                Plan examen · J-{rescuePlan.daysLeft}
+              </Text>
+              <Text style={{ color: c.textSecondary, fontSize: 12 }} numberOfLines={1}>
+                {rescuePlan.exam.title} · {rescuePlan.dailyMinutes} min aujourd’hui
+              </Text>
+            </View>
+            <Pill tone={rescuePlan.readiness >= 85 ? "success" : "warning"}>
+              Prêt à {rescuePlan.readiness} %
+            </Pill>
+          </View>
+          {rescuePlan.missions.length ? rescuePlan.missions.map((mission, index) => (
+            <Pressable
+              key={mission.course.id}
+              onPress={() => router.push(`/session/${mission.course.id}`)}
+              style={[styles.rescueMission, { backgroundColor: c.surfaceMuted }]}
+            >
+              <View style={[styles.missionIndex, { backgroundColor: c.primarySoft }]}>
+                <Text style={{ color: c.primary, fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ color: c.textPrimary, fontWeight: "600", fontSize: 13 }} numberOfLines={1}>
+                  {mission.course.title}
+                </Text>
+                <Text style={{ color: c.textSecondary, fontSize: 11 }}>
+                  {mission.reason} · {mission.minutes} min
+                </Text>
+              </View>
+              <AppIcon icon={PlayIcon} size={16} color={c.primary} />
+            </Pressable>
+          )) : (
+            <Text style={{ color: c.textSecondary, fontSize: 13 }}>
+              Ajoute des cours à cette matière pour générer ton plan quotidien.
+            </Text>
+          )}
+        </Card>
+      )}
+
       {/* Planned Study Sessions */}
       {todaySessions.length > 0 && (
         <View style={{ gap: 8 }}>
@@ -379,7 +431,7 @@ export default function Today() {
       )}
 
       {/* Memory Curve */}
-      <MemoryCurve plans={plans} now={tick} />
+      <MemoryCurve plans={plans} now={tick} exams={exams} />
 
       {/* Due Courses */}
       {!courses.length ? (
@@ -518,4 +570,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: "hidden",
   },
+  rescueMission: { flexDirection: "row", alignItems: "center", gap: 10, padding: 10, borderRadius: 10 },
+  missionIndex: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
 });

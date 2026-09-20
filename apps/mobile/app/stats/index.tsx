@@ -28,12 +28,15 @@ import {
   type Course,
   type Plan,
   type Subject,
+  type Exam,
 } from "../../src/database/entities";
 import { dayKey } from "../../src/utils/dates";
 import { MemoryCurve } from "../../src/ui/MemoryCurve";
 import { estimatePlanRetention } from "../../src/review/fsrsScheduler";
 import { calculateStreaks } from "../../src/utils/streak";
 import { calculateDailyWorkloads } from "../../src/planning/workloadBalancer";
+import { buildWeeklyReport } from "../../src/stats/weeklyReport";
+import { MasteryRadar } from "../../src/ui/MasteryRadar";
 
 type TimeRange = "7 j" | "30 j" | "90 j" | "Tout";
 
@@ -42,11 +45,13 @@ export default function Stats() {
   const rawCourses = useEntities("course");
   const rawPlans = useEntities("reviewPlan");
   const rawSubjects = useEntities("subject");
+  const rawExams = useEntities("exam");
 
   const events = rawEvents.map((e) => eventSchema.parse(e));
   const courses = rawCourses.map((c) => courseSchema.parse(c)) as Course[];
   const plans = rawPlans.map((p) => planSchema.parse(p)) as Plan[];
   const subjects = rawSubjects as Subject[];
+  const exams = rawExams as Exam[];
 
   const c = usePalette();
   const [tick, setTick] = useState(Date.now());
@@ -160,6 +165,7 @@ export default function Stats() {
     })
     .filter((item) => item.courseCount > 0)
     .sort((a, b) => a.retention - b.retention);
+  const weeklyReport = buildWeeklyReport(events, courses, activePlans, now);
 
   return (
     <Screen>
@@ -240,6 +246,31 @@ export default function Stats() {
         </Card>
       </View>
 
+      <Card style={{ gap: 12 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View>
+            <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: "700" }}>Bilan de la semaine</Text>
+            <Text style={{ color: c.textSecondary, fontSize: 12 }}>Tes progrès des 7 derniers jours</Text>
+          </View>
+          <Pill tone={weeklyReport.delta >= 0 ? "success" : "warning"}>
+            {weeklyReport.delta >= 0 ? "+" : ""}{weeklyReport.delta} activité{Math.abs(weeklyReport.delta) > 1 ? "s" : ""}
+          </Pill>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+          {[
+            ["Révisions", weeklyReport.reviews],
+            ["Temps", `${weeklyReport.minutes} min`],
+            ["Réussite", `${weeklyReport.successRate} %`],
+          ].map(([label, value]) => (
+            <View key={String(label)} style={[styles.weeklyMetric, { backgroundColor: c.surfaceMuted }]}>
+              <Text style={{ color: c.textPrimary, fontWeight: "700", fontSize: 15 }}>{value}</Text>
+              <Text style={{ color: c.textSecondary, fontSize: 11 }}>{label}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={{ color: c.textSecondary, fontSize: 13, lineHeight: 18 }}>{weeklyReport.message}</Text>
+      </Card>
+
       {/* Time Studied & Forecast */}
       <Card style={{ padding: 14, gap: 10 }}>
         <SectionTitle title="Temps d’étude" />
@@ -266,7 +297,14 @@ export default function Stats() {
       </Card>
 
       {/* Memory Curve */}
-      <MemoryCurve plans={plans} now={tick} />
+      <MemoryCurve plans={plans} now={tick} exams={exams} />
+
+      <MasteryRadar
+        axes={subjectStats.map((item) => ({
+          label: String(item.subject.title),
+          value: item.retention,
+        }))}
+      />
 
       {/* Subjects retention */}
       {subjectStats.length > 0 && (
@@ -363,5 +401,5 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 4,
   },
+  weeklyMetric: { flex: 1, alignItems: "center", gap: 2, paddingVertical: 10, borderRadius: 10 },
 });
-

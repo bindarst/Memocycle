@@ -205,9 +205,17 @@ export const helpSections: HelpSection[] = [
       {
         id: "planning-exams",
         question: "Comment préparer un examen ?",
-        answer: "Ajoute l’examen depuis la matière ou le module concerné. Touche la date pour ouvrir le calendrier, choisis un jour et une heure rapide, puis enregistre. Le bouton Modifier permet de corriger un examen existant. Les priorités tiennent compte de sa proximité et des cours à consolider.",
+        answer: "Ajoute l’examen depuis la matière ou le module concerné. Touche la date pour ouvrir le calendrier, choisis un jour et une heure rapide, puis enregistre. Dans les 30 jours précédant l’épreuve, Aujourd’hui affiche automatiquement un plan examen : il répartit ton temps disponible entre les cours les plus fragiles et indique un niveau de préparation estimé. Touche une mission pour commencer.",
         destination: "calendar",
         actionLabel: "Voir le calendrier",
+      },
+      {
+        id: "planning-rescue",
+        question: "Comment fonctionne le plan « Sauve mon examen » ?",
+        answer: "Le plan apparaît dans Aujourd’hui lorsqu’un examen est prévu dans moins de 30 jours. Il rassemble les cours de la matière, place en premier ceux qui n’ont pas encore été étudiés ou dont la rétention estimée est faible, puis respecte ton objectif de temps quotidien. Le pourcentage « Prêt » est une estimation fondée sur tes révisions : ce n’est pas une garantie de résultat.",
+        destination: "today",
+        actionLabel: "Voir mon plan du jour",
+        keywords: "sauve examen urgence préparation prêt missions",
       },
       {
         id: "planning-balance",
@@ -236,9 +244,25 @@ export const helpSections: HelpSection[] = [
       {
         id: "progress-curve",
         question: "Que montre la courbe de l’oubli ?",
-        answer: "La courbe représente une estimation de la probabilité moyenne de te rappeler tes cours actifs. Elle évolue avec le temps et les révisions enregistrées. Sans planning actif, l’application montre une courbe théorique. Ce n’est ni une mesure directe de ton cerveau, ni une note d’examen.",
+        answer: "La courbe représente une estimation de la probabilité moyenne de te rappeler tes cours actifs. Elle évolue avec le temps et les révisions enregistrées. Utilise les boutons 7 j, 14 j et 30 j pour simuler l’évolution ; Examen projette la courbe jusqu’à l’épreuve la plus proche. Sans planning actif, l’application montre une courbe théorique. Ce n’est ni une mesure directe de ton cerveau, ni une note d’examen.",
         destination: "today",
         actionLabel: "Voir la courbe",
+      },
+      {
+        id: "progress-radar",
+        question: "Comment lire le radar de maîtrise ?",
+        answer: "Le radar compare jusqu’à six matières dans Progression. Chaque axe correspond à une matière et sa distance au centre représente la rétention moyenne estimée. Une zone courte signale une matière à consolider. Le radar devient disponible dès que trois matières contiennent des cours suivis.",
+        destination: "stats",
+        actionLabel: "Voir mon radar",
+        keywords: "radar maîtrise matière fragile",
+      },
+      {
+        id: "progress-weekly",
+        question: "Que contient le bilan hebdomadaire ?",
+        answer: "Le bilan des sept derniers jours affiche le nombre d’activités, le temps consacré, le taux de réponses Bien ou Facile et la différence avec la semaine précédente. Son message met en avant le prochain effort utile. Tu le trouveras en haut de Progression.",
+        destination: "stats",
+        actionLabel: "Voir mon bilan",
+        keywords: "semaine rapport bilan progrès temps réussite",
       },
       {
         id: "progress-risk",
@@ -321,6 +345,12 @@ export const helpSections: HelpSection[] = [
         id: "reminders-no-push",
         question: "Pourquoi un rappel peut-il manquer ?",
         answer: "Vérifie d’abord le bouton Rappels, la permission système, les heures calmes et la date de la révision. Certains réglages d’économie de batterie ou de notifications du téléphone peuvent différer ou masquer une alerte. Ouvre MémoCycle pour actualiser le planning si tu viens de modifier plusieurs cours hors ligne.",
+      },
+      {
+        id: "reminders-widget",
+        question: "Comment ajouter le widget MémoCycle sur Android ?",
+        answer: "Fais un appui long sur une zone vide de l’écran d’accueil Android, choisis Widgets, cherche MémoCycle puis fais glisser le widget. Il affiche un raccourci vers la priorité du jour et ouvre directement l’application avec le bouton Réviser. Les informations se rafraîchissent lorsque tu ouvres MémoCycle.",
+        keywords: "widget écran accueil android raccourci",
       },
     ],
   },
