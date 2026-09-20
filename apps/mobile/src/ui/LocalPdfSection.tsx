@@ -7,6 +7,7 @@ import {
   openLocalPdf,
   pickAndAddLocalPdf,
   removeLocalPdf,
+  shareLocalPdf,
   type LocalPdf,
   type PdfParentType,
 } from "../pdf/localPdfs";
@@ -47,21 +48,26 @@ export function LocalPdfSection({ parentType, parentId, compact = false, readOnl
           </Text>
         )}
         {files.map((file) => (
-          <View key={file.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <AppIcon icon={File01Icon} color={c.primary} size={18} />
-            <View style={{ flex: 1 }}>
-              <Text numberOfLines={1} style={{ color: c.textPrimary, fontSize: 13, fontWeight: "600" }}>{file.filename}</Text>
-              <Text style={{ color: c.textSecondary, fontSize: 11 }}>{Math.max(1, Math.round(file.sizeBytes / 1024))} Ko · local</Text>
+          <View key={file.id} style={{ gap: 6, paddingVertical: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <AppIcon icon={File01Icon} color={c.primary} size={18} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text numberOfLines={1} style={{ color: c.textPrimary, fontSize: 13, fontWeight: "600" }}>{file.filename}</Text>
+                <Text style={{ color: c.textSecondary, fontSize: 11 }}>{Math.max(1, Math.round(file.sizeBytes / 1024))} Ko · local</Text>
+              </View>
             </View>
-            <Button size="sm" variant="ghost" title="Ouvrir" onPress={() => void action.run(() => openLocalPdf(userId, file.id))} />
-            {!readOnly && (
-              <Button
-                size="sm"
-                variant="ghost"
-                title="Retirer"
-                onPress={() => confirm("Retirer ce PDF ?", "Le fichier sera effacé de MémoCycle sur ce téléphone.", () => void action.run(async () => { await removeLocalPdf(userId, file.id); await reload(); }))}
-              />
-            )}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4 }}>
+              <Button size="sm" variant="ghost" title="Ouvrir" onPress={() => void action.run(() => openLocalPdf(userId, file.id))} />
+              <Button size="sm" variant="ghost" title="Partager" onPress={() => void action.run(() => shareLocalPdf(userId, file.id))} />
+              {!readOnly && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  title="Retirer"
+                  onPress={() => confirm("Retirer ce PDF ?", "Le fichier sera effacé de MémoCycle sur ce téléphone.", () => void action.run(async () => { await removeLocalPdf(userId, file.id); await reload(); }))}
+                />
+              )}
+            </View>
           </View>
         ))}
         {!readOnly && <Button size="sm" variant="secondary" icon={Add01Icon} title="Ajouter un PDF" disabled={action.busy} onPress={add} />}

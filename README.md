@@ -70,11 +70,11 @@ npx expo run:ios
 
 Ensuite : `npm run dev:mobile` à la racine.
 
-Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.11.apk` et
-`artifacts/Memocycle-v1.0.11.aab` (version Android 1.0.11, code 12), également
+Les nouveaux livrables signés sont `artifacts/Memocycle-v1.0.12.apk` et
+`artifacts/Memocycle-v1.0.12.aab` (version Android 1.0.12, code 13), également
 copiés dans `C:\Users\Adminpc\OneDrive\Memocycle\`. Ouvrir l'APK sur un téléphone
 Android permet une installation directe, sans Expo ni USB. Google Play demande
-le fichier AAB. La version 1.0.7 est publiée sur le canal de test interne Google Play ; la 1.0.11 est prête à être importée. Cette version ajoute le plan examen par phases, la courbe interactive, le radar de maîtrise, le bilan hebdomadaire et le widget Android. Elle sépare clairement l'étude chronométrée du test de mémoire et corrige les raccourcis de révision. Le canal est
+le fichier AAB. La version 1.0.7 est publiée sur le canal de test interne Google Play ; la 1.0.12 est prête à être importée. Cette version ajoute le plan examen par phases, la courbe interactive, le radar de maîtrise, le bilan hebdomadaire et le widget Android. Elle sépare clairement l'étude chronométrée du test de mémoire et ouvre les PDF directement dans un lecteur Android, avec une action de partage distincte. Le canal est
 actif pour `bindarst2011@gmail.com` et le lien d'inscription est
 https://play.google.com/apps/internaltest/4701281405599427540. La mise en
 production reste soumise au test fermé obligatoire de 12 testeurs pendant

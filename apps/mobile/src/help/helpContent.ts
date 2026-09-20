@@ -92,7 +92,7 @@ export const helpSections: HelpSection[] = [
       {
         id: "organize-pdf",
         question: "Comment ajouter un PDF à une matière, un cours ou une fiche ?",
-        answer: "Ouvre la matière ou le cours et touche Ajouter un PDF dans la section Documents PDF. Pour une fiche, crée-la d’abord puis utilise Ajouter un PDF sous cette fiche. Tu peux ouvrir ou retirer les documents depuis le même écran. Chaque PDF est copié dans le stockage privé de MémoCycle sur ce téléphone, avec une limite de 50 Mo. Il n’est pas envoyé à OVH et ne suit pas la synchronisation des cours.",
+        answer: "Ouvre la matière ou le cours et touche Ajouter un PDF dans la section Documents PDF. Pour une fiche, crée-la d’abord puis utilise Ajouter un PDF sous cette fiche. Ouvrir lance le lecteur PDF installé sur Android ; Partager ouvre séparément la feuille de partage. Chaque PDF est copié dans le stockage privé de MémoCycle sur ce téléphone, avec une limite de 50 Mo. Il n’est pas envoyé à OVH et ne suit pas la synchronisation des cours.",
         destination: "library",
         actionLabel: "Ouvrir mes cours",
       },

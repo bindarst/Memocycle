@@ -1,5 +1,8 @@
 import { Directory, File, Paths } from "expo-file-system";
+import { getContentUriAsync } from "expo-file-system/legacy";
+import * as IntentLauncher from "expo-intent-launcher";
 import * as Sharing from "expo-sharing";
+import { Platform } from "react-native";
 import { database } from "../database/database";
 import { newId } from "../utils/ids";
 
@@ -77,8 +80,33 @@ export async function openLocalPdf(userId: string, id: string) {
   if (!row) throw new Error("PDF introuvable sur ce téléphone.");
   const file = fileForId(userId, id);
   if (!file.exists) throw new Error("Ce PDF n’est plus présent sur ce téléphone.");
+  if (Platform.OS === "android") {
+    const contentUri = await getContentUriAsync(file.uri);
+    try {
+      await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+        data: contentUri,
+        type: "application/pdf",
+        flags: 1,
+      });
+      return;
+    } catch {
+      throw new Error("Aucun lecteur PDF n’est installé sur ce téléphone.");
+    }
+  }
   if (!(await Sharing.isAvailableAsync())) throw new Error("Aucune application ne peut ouvrir ce PDF.");
-  await Sharing.shareAsync(file.uri, { mimeType: "application/pdf", dialogTitle: "Ouvrir le PDF" });
+  await Sharing.shareAsync(file.uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf", dialogTitle: "Ouvrir le PDF" });
+}
+
+export async function shareLocalPdf(userId: string, id: string) {
+  const db = await database();
+  const row = await db.getFirstAsync<{ id: string }>(
+    "SELECT id FROM local_pdf_attachments WHERE id=? AND owner_user_id=?", id, userId,
+  );
+  if (!row) throw new Error("PDF introuvable sur ce téléphone.");
+  const file = fileForId(userId, id);
+  if (!file.exists) throw new Error("Ce PDF n’est plus présent sur ce téléphone.");
+  if (!(await Sharing.isAvailableAsync())) throw new Error("Le partage n’est pas disponible sur ce téléphone.");
+  await Sharing.shareAsync(file.uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf", dialogTitle: "Partager le PDF" });
 }
 
 export async function removeLocalPdf(userId: string, id: string) {
