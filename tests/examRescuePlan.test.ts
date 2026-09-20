@@ -16,5 +16,6 @@ describe("exam rescue plan", () => {
     expect(result.missions.map((item) => item.course.id)).toEqual(["new"]);
     expect(result.missions[0]?.minutes).toBe(15);
     expect(result.readiness).toBe(35);
+    expect(result.phase).toBe("Apprentissage");
   });
 });

@@ -243,9 +243,9 @@ export default function Today() {
             <Button
               size="sm"
               variant="primary"
-              title="Démarrer"
               icon={PlayIcon}
-              onPress={() => router.push(`/session/${duePlans[0]!.courseId}`)}
+              title="Réviser maintenant"
+              onPress={() => router.push(`/review/${duePlans[0]!.courseId}`)}
             />
           )}
         </View>
@@ -353,7 +353,7 @@ export default function Today() {
                 Plan examen · J-{rescuePlan.daysLeft}
               </Text>
               <Text style={{ color: c.textSecondary, fontSize: 12 }} numberOfLines={1}>
-                {rescuePlan.exam.title} · {rescuePlan.dailyMinutes} min aujourd’hui
+                {rescuePlan.exam.title} · phase {rescuePlan.phase.toLowerCase()}
               </Text>
             </View>
             <Pill tone={rescuePlan.readiness >= 85 ? "success" : "warning"}>
@@ -419,7 +419,7 @@ export default function Today() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    title="Démarrer"
+                    title="Étudier"
                     icon={PlayIcon}
                     onPress={() => router.push(`/session/${course.id}`)}
                   />

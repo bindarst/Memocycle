@@ -123,6 +123,12 @@ export const helpSections: HelpSection[] = [
         actionLabel: "Ouvrir un cours",
       },
       {
+        id: "review-study-difference",
+        question: "Quelle différence entre Étudier et Tester ma mémoire ?",
+        answer: "Étudier avec le chrono sert à comprendre, relire, prendre des notes ou parcourir les fiches librement. Cette activité mesure ton temps de travail. Tester ma mémoire lance le rappel actif : tu cherches la réponse sans regarder, tu indiques la difficulté, puis MémoCycle recalcule la prochaine échéance. Quand une révision est due, utilise en priorité Tester ma mémoire ; utilise Étudier pour découvrir ou retravailler le contenu.",
+        keywords: "réviser démarrer session étudier chrono différence",
+      },
+      {
         id: "review-steps",
         question: "Comment se déroule une révision ?",
         answer: "Ouvre une révision due ou le bouton Réviser d’un cours. Lis la question, cherche la réponse sans regarder, puis affiche-la. Évalue chaque fiche selon ta facilité à la retrouver. Termine la session et valide pour enregistrer le résultat et recalculer la prochaine échéance. Sans fiche, donne une note globale au cours.",

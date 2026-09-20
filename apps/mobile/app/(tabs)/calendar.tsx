@@ -439,8 +439,8 @@ export default function Calendar() {
           <Button
             size="sm"
             variant="secondary"
-            title="Session"
-            onPress={() => router.push(`/session/${item.courseId}`)}
+            title={item.type === "review" ? "Réviser" : "Étudier"}
+            onPress={() => router.push(item.type === "review" ? `/review/${item.courseId}` : `/session/${item.courseId}`)}
             icon={PlayIcon}
           />
         )}

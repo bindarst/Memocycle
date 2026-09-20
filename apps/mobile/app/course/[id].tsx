@@ -209,7 +209,7 @@ export default function CourseDetail() {
                 !plan
                   ? "J’ai étudié ce cours"
                   : plan.status === "active"
-                  ? "Commencer la session"
+                  ? "Étudier avec le chrono"
                   : "Recommencer un cycle"
               }
               icon={PlayIcon}
@@ -238,11 +238,21 @@ export default function CourseDetail() {
               <Button
                 size="sm"
                 variant="secondary"
-                title="Réviser"
+                title="Tester ma mémoire"
                 icon={SparklesIcon}
                 onPress={() => router.push(`/review/${id}?mode=voluntary`)}
                 style={{ flex: 1 }}
               />
+            </View>
+          )}
+          {plan?.status === "active" && (
+            <View style={{ paddingTop: 2, gap: 3 }}>
+              <Text style={{ fontSize: 11, color: c.textSecondary, lineHeight: 16 }}>
+                <Text style={{ fontWeight: "700", color: c.textPrimary }}>Étudier</Text> : comprendre, relire ou travailler librement avec le chrono.
+              </Text>
+              <Text style={{ fontSize: 11, color: c.textSecondary, lineHeight: 16 }}>
+                <Text style={{ fontWeight: "700", color: c.textPrimary }}>Tester ma mémoire</Text> : répondre sans regarder et recalculer la prochaine révision.
+              </Text>
             </View>
           )}
         </View>

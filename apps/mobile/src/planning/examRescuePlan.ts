@@ -16,6 +16,7 @@ export type ExamRescuePlan = {
   daysLeft: number;
   dailyMinutes: number;
   readiness: number;
+  phase: "Rattrapage" | "Apprentissage" | "Consolidation" | "Révision finale";
   missions: ExamRescueMission[];
 };
 
@@ -43,6 +44,14 @@ export function buildExamRescuePlan(
   const readiness = scored.length
     ? Math.round((scored.reduce((sum, item) => sum + item.retention, 0) / scored.length) * 100)
     : 0;
+  const hasUnstarted = scored.some((item) => !item.plan);
+  const phase = daysLeft <= 2
+    ? "Révision finale"
+    : hasUnstarted
+      ? "Apprentissage"
+      : readiness < 70
+        ? "Rattrapage"
+        : "Consolidation";
   let remaining = Math.max(10, dailyMinutes);
   const missions: ExamRescueMission[] = [];
   for (const item of scored) {
@@ -63,5 +72,5 @@ export function buildExamRescuePlan(
     remaining -= minutes;
     if (remaining < 5) break;
   }
-  return { exam, daysLeft, dailyMinutes, readiness, missions };
+  return { exam, daysLeft, dailyMinutes, readiness, phase, missions };
 }
